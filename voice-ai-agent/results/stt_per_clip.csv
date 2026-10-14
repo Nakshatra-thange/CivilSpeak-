@@ -1,0 +1,13 @@
+file,speaker,system,latency_s,wer,term_recall,devanagari_share,hypothesis,error
+clip01.wav,me,sarvam_transcribe,0.0,,,0.0,,[Errno 2] No such file or directory: '/Users/nakshatravijaythange/voice-ai-agent/superkalam/voice-ai-agent/clips/clip01.
+clip01.wav,me,sarvam_codemix,0.0,,,0.0,,[Errno 2] No such file or directory: '/Users/nakshatravijaythange/voice-ai-agent/superkalam/voice-ai-agent/clips/clip01.
+clip01.wav,me,sarvam_translit,0.0,,,0.0,,[Errno 2] No such file or directory: '/Users/nakshatravijaythange/voice-ai-agent/superkalam/voice-ai-agent/clips/clip01.
+clip01.wav,me,deepgram_nova3,0.0,,,0.0,,[Errno 2] No such file or directory: '/Users/nakshatravijaythange/voice-ai-agent/superkalam/voice-ai-agent/clips/clip01.
+clip02.wav,me,sarvam_transcribe,0.0,,,0.0,,[Errno 2] No such file or directory: '/Users/nakshatravijaythange/voice-ai-agent/superkalam/voice-ai-agent/clips/clip02.
+clip02.wav,me,sarvam_codemix,0.0,,,0.0,,[Errno 2] No such file or directory: '/Users/nakshatravijaythange/voice-ai-agent/superkalam/voice-ai-agent/clips/clip02.
+clip02.wav,me,sarvam_translit,0.0,,,0.0,,[Errno 2] No such file or directory: '/Users/nakshatravijaythange/voice-ai-agent/superkalam/voice-ai-agent/clips/clip02.
+clip02.wav,me,deepgram_nova3,0.0,,,0.0,,[Errno 2] No such file or directory: '/Users/nakshatravijaythange/voice-ai-agent/superkalam/voice-ai-agent/clips/clip02.
+clip03.wav,friend1,sarvam_transcribe,0.0,,,0.0,,[Errno 2] No such file or directory: '/Users/nakshatravijaythange/voice-ai-agent/superkalam/voice-ai-agent/clips/clip03.
+clip03.wav,friend1,sarvam_codemix,0.0,,,0.0,,[Errno 2] No such file or directory: '/Users/nakshatravijaythange/voice-ai-agent/superkalam/voice-ai-agent/clips/clip03.
+clip03.wav,friend1,sarvam_translit,0.0,,,0.0,,[Errno 2] No such file or directory: '/Users/nakshatravijaythange/voice-ai-agent/superkalam/voice-ai-agent/clips/clip03.
+clip03.wav,friend1,deepgram_nova3,0.0,,,0.0,,[Errno 2] No such file or directory: '/Users/nakshatravijaythange/voice-ai-agent/superkalam/voice-ai-agent/clips/clip03.

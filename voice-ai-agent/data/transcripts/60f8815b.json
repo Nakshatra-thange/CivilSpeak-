@@ -1,0 +1,293 @@
+{
+  "session_id": "60f8815b",
+  "source": "live",
+  "duration_s": 350,
+  "turns": [
+    {
+      "role": "user",
+      "text": "Hello."
+    },
+    {
+      "role": "assistant",
+      "text": "Hello. I am the Chairperson of the interview board. Before we begin, would you prefer to conduct this interview in English or Hindi?"
+    },
+    {
+      "role": "user",
+      "text": "Good morning sir I would like to discuss this interview in English."
+    },
+    {
+      "role": "assistant",
+      "text": "Good morning. Since we don't have your details on file, let's start with the basics. May I know your full name and where you are from?"
+    },
+    {
+      "role": "user",
+      "text": "Yes my full name is Nakshatra Thange and I am from Pune."
+    },
+    {
+      "role": "assistant",
+      "text": "Thank you, Nakshatra. Could you tell me about your graduation subject, the college you attended, and if you have chosen an optional subject for the examination?"
+    },
+    {
+      "role": "user",
+      "text": "Yes sir so I did attend Vellore Institute of Technology."
+    },
+    {
+      "role": "assistant",
+      "text": "I see. But"
+    },
+    {
+      "role": "user",
+      "text": "भूमिका। And I did my engineering in B.Tech."
+    },
+    {
+      "role": "assistant",
+      "text": "Achha, B.Tech from VIT. And what about your optional subject for the UPSC exam?"
+    },
+    {
+      "role": "user",
+      "text": "I did choose philosophy as my."
+    },
+    {
+      "role": "assistant",
+      "text": "Philosophy is an interesting choice for an engineer. Now, tell me about your main hobbies or interests, and do you have any professional work experience?"
+    },
+    {
+      "role": "user",
+      "text": "Just out of."
+    },
+    {
+      "role": "assistant",
+      "text": "I am sorry, I didn't quite catch that. Could you please repeat your hobbies and tell me if you have any work experience?"
+    },
+    {
+      "role": "user",
+      "text": "Yes so my hobbies are to read philosophical texts, listen to podcast. Right a lot. I do not have any work experience."
+    },
+    {
+      "role": "assistant",
+      "text": "I see. Lastly, which civil services are you preferring in your DAF?"
+    },
+    {
+      "role": "user",
+      "text": "Google PS in civil services. हाँ।"
+    },
+    {
+      "role": "assistant",
+      "text": "I am sorry, I didn't quite understand that. Could you please clarify which services you prefer, for example IAS, IPS or IFS?"
+    },
+    {
+      "role": "user",
+      "text": "Yes the IAS Indian Administrative Service."
+    },
+    {
+      "role": "assistant",
+      "text": "Thank you. Now, please choose the intensity for today's interview. You can choose gentle, standard, or tough. \n\nGentle is more supportive, standard is a realistic board experience, and tough involves pointed cross-questioning. Which one would you prefer?"
+    },
+    {
+      "role": "user",
+      "text": "I would prefer standard something which will give me a real experience."
+    },
+    {
+      "role": "assistant",
+      "text": "Very well. Let us begin. Nakshatra, you are from Pune, a city often called the Oxford of the East. In your opinion, how has the city's educational legacy contributed to the socio-economic development of Maharashtra?"
+    },
+    {
+      "role": "user",
+      "text": "Right. is indeed a. called as Oxus of the East because of. The vast nature of its universities."
+    },
+    {
+      "role": "user",
+      "text": "और और। Where the universities are? changed in order to just become better."
+    },
+    {
+      "role": "user",
+      "text": "बड़ा engineering colleges, बड़ा medical."
+    },
+    {
+      "role": "user",
+      "text": "Universe also have."
+    },
+    {
+      "role": "user",
+      "text": "was also the center of the city where women first Educating themselves. Rukmini Phule was from Phule and she started. Education in Pune."
+    },
+    {
+      "role": "assistant",
+      "text": "I see. You mentioned the role of Savitribai and Jyotirao Phule in pioneering women's education in Pune. Given this history of social reform, do you think Pune has successfully translated this legacy into achieving gender parity in the local workforce today?"
+    },
+    {
+      "role": "user",
+      "text": "Compared to all the other cities I have been to. Hyderabad. Any other cities I think yes Pune has. Try to at least achieve the gender."
+    },
+    {
+      "role": "assistant",
+      "text": "You say Pune has tried to achieve this, but can you provide any specific reason or indicator that leads you to believe Pune is doing better in terms of gender parity in the workforce compared to a city like Hyderabad?"
+    },
+    {
+      "role": "user",
+      "text": "technical."
+    },
+    {
+      "role": "assistant",
+      "text": "I am sorry, I didn't quite hear you. You mentioned something about technical, but could you please elaborate on your point?"
+    },
+    {
+      "role": "user",
+      "text": "Yes sir. I do not have any technical points as of now. और I am not able to recall."
+    },
+    {
+      "role": "assistant",
+      "text": "That is alright. Let us move to another topic. You have a background in engineering but chose Philosophy as your optional subject. How do you think the logical framework of engineering and the abstract nature of philosophy can complement each other in the administration of a district?"
+    },
+    {
+      "role": "user",
+      "text": "That's a great question because I think philosophy. Studying the nature of thought."
+    },
+    {
+      "role": "assistant",
+      "text": "I see. You"
+    },
+    {
+      "role": "user",
+      "text": "Engineering is."
+    },
+    {
+      "role": "assistant",
+      "text": "Please continue. How"
+    },
+    {
+      "role": "user",
+      "text": "Just study."
+    },
+    {
+      "role": "assistant",
+      "text": "I think you are struggling to articulate the connection. Could you please try again and tell me how the analytical side of engineering and the ethics of philosophy can help you as an IAS officer?"
+    },
+    {
+      "role": "user",
+      "text": "Yes so I was telling."
+    },
+    {
+      "role": "user",
+      "text": "इतिहास पे ही तो है। Engineering is not the study of reality."
+    },
+    {
+      "role": "assistant",
+      "text": "I see. You are saying engineering is not the study of reality. Could you explain what you mean by that, and how that relates to your study of philosophy?"
+    },
+    {
+      "role": "user",
+      "text": "सब कुछ"
+    },
+    {
+      "role": "user",
+      "text": "Last philosophy."
+    },
+    {
+      "role": "assistant",
+      "text": "I am sorry, but your answer is becoming unclear. Could you please explain specifically how your knowledge of philosophy will help you handle"
+    }
+  ],
+  "tool_calls": [
+    "save_profile"
+  ],
+  "latency": {
+    "eou_delay": [
+      2.502,
+      0.489,
+      2.5,
+      0.495,
+      0.512,
+      0.47,
+      0.474,
+      0.648,
+      0.476,
+      0.478,
+      0.487,
+      0.468,
+      0.492,
+      0.431,
+      0.437,
+      0.565,
+      0.564,
+      0.482,
+      0.49,
+      0.474,
+      0.412,
+      0.439,
+      0.455,
+      0.468,
+      0.466,
+      0.427
+    ],
+    "llm_ttft": [
+      0.749,
+      0.844,
+      0.568,
+      0.614,
+      0.575,
+      1.155,
+      0.529,
+      0.508,
+      0.593,
+      0.532,
+      0.787,
+      0.565,
+      0.541,
+      0.817,
+      0.553,
+      0.56,
+      0.542,
+      0.509,
+      0.537,
+      0.584,
+      0.639,
+      0.562,
+      0.572,
+      0.798,
+      0.567,
+      0.591,
+      0.564,
+      0.603,
+      0.563,
+      0.91,
+      0.607,
+      0.645,
+      0.591,
+      0.541,
+      0.546,
+      0.615,
+      0.717,
+      0.634,
+      0.839,
+      0.636,
+      0.608,
+      0.951,
+      0.891
+    ],
+    "tts_ttfb": [
+      0.221,
+      0.212,
+      0.273,
+      0.244,
+      0.398,
+      0.215,
+      0.237,
+      0.209,
+      0.211,
+      0.215,
+      0.22,
+      0.2,
+      0.221,
+      0.245,
+      0.201,
+      0.21,
+      0.224,
+      0.216,
+      0.242,
+      0.21,
+      0.207,
+      0.216
+    ]
+  }
+}

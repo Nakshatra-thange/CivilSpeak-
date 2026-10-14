@@ -1,0 +1,5 @@
+system,clips,term_recall,wer,median_latency_s,devanagari_share,errors
+deepgram_nova3,,,,,,3
+sarvam_codemix,,,,,,3
+sarvam_transcribe,,,,,,3
+sarvam_translit,,,,,,3

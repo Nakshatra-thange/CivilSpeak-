@@ -1,0 +1,89 @@
+{
+  "session_id": "0a7f0b62",
+  "source": "live",
+  "duration_s": 128,
+  "turns": [
+    {
+      "role": "assistant",
+      "text": "Hello Nakshatra. I am the Chairperson of this board.\n\nI see we have your details on file: you are from Pune, a B.Tech graduate from VIT, with Philosophy as your optional, and you prefer the IAS. Are these details still correct, and would you like to continue the interview in English?"
+    },
+    {
+      "role": "user",
+      "text": "Yes."
+    },
+    {
+      "role": "assistant",
+      "text": "Understood. Before we begin, please choose the intensity of the interview: gentle, standard, or tough.\n\nGentle is supportive, standard is a realistic board experience, and tough involves pointed cross-questioning. Which one would you prefer?"
+    },
+    {
+      "role": "user",
+      "text": "Answer."
+    },
+    {
+      "role": "assistant",
+      "text": "I am sorry, but I need you"
+    },
+    {
+      "role": "user",
+      "text": "टफ।"
+    },
+    {
+      "role": "assistant",
+      "text": "Theek hai, tough intensity it is. We will proceed with a rigorous approach.\n\nLet's start with your background. You have a technical degree from VIT but chose Philosophy as your optional. To a critic, this might look like an attempt to avoid technical questions or a lack of conviction in your core field. How do you justify this choice?"
+    },
+    {
+      "role": "user",
+      "text": "सीता।"
+    },
+    {
+      "role": "assistant",
+      "text": "I am sorry, I did not understand that answer. Could you please repeat or clarify what you meant?"
+    },
+    {
+      "role": "user",
+      "text": "Yes. I was so young."
+    },
+    {
+      "role": "assistant",
+      "text": "I am not sure I follow. You mentioned being young, but the question was about your justification for choosing Philosophy over your technical background for the UPSC optional. Could you please address that specifically?"
+    },
+    {
+      "role": "user",
+      "text": "The technical side of language."
+    },
+    {
+      "role": "assistant",
+      "text": "I am still not clear on how the technical side of language justifies"
+    }
+  ],
+  "tool_calls": [],
+  "latency": {
+    "eou_delay": [
+      5.267,
+      0.491,
+      0.464,
+      0.486,
+      0.47,
+      0.467
+    ],
+    "llm_ttft": [
+      0.552,
+      0.581,
+      0.599,
+      0.59,
+      0.594,
+      0.67,
+      0.517,
+      0.56
+    ],
+    "tts_ttfb": [
+      0.22,
+      0.208,
+      0.22,
+      0.229,
+      0.237,
+      0.214,
+      0.207
+    ]
+  }
+}

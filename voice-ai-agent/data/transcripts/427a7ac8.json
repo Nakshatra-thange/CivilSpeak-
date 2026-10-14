@@ -1,0 +1,66 @@
+{
+  "session_id": "427a7ac8",
+  "source": "live",
+  "duration_s": 117,
+  "turns": [
+    {
+      "role": "assistant",
+      "text": "Good morning. I am the Chairperson of this board. Welcome to your mock personality test.\n\nNakshatra Thange, it is a pleasure to have you here. I have your details: B.Tech from VIT, Philosophy"
+    },
+    {
+      "role": "user",
+      "text": "Yes sir."
+    },
+    {
+      "role": "assistant",
+      "text": "And you prefer English as your medium, with a preference for the IAS. Are all these details still correct?"
+    },
+    {
+      "role": "user",
+      "text": "That is right."
+    },
+    {
+      "role": "assistant",
+      "text": "Before we begin, please let me know the intensity you would prefer for this session. We have gentle, which is more supportive, standard, which is a realistic board experience, or tough, where I will act as a devil's advocate and cross-question you more pointedly."
+    },
+    {
+      "role": "user",
+      "text": "I will write to choose gender."
+    },
+    {
+      "role": "assistant",
+      "text": "I think you meant you would like to choose gentle. Just to clarify, gentle means a supportive tone with more thinking time and fewer cross-questions. Is that what you would like?"
+    },
+    {
+      "role": "user",
+      "text": "Yes."
+    },
+    {
+      "role": "assistant",
+      "text": "Alright. Let us begin. You are from Pune, a city known as the Oxford of the East. In your opinion, how has this academic environment influenced the socio-economic development of the region?"
+    }
+  ],
+  "tool_calls": [],
+  "latency": {
+    "eou_delay": [
+      0.481,
+      0.485,
+      0.46,
+      0.45
+    ],
+    "llm_ttft": [
+      1.166,
+      0.621,
+      0.51,
+      0.589,
+      0.51
+    ],
+    "tts_ttfb": [
+      0.228,
+      0.21,
+      0.209,
+      0.21,
+      0.394
+    ]
+  }
+}

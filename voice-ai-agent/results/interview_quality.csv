@@ -1,0 +1,2 @@
+session,group,board_turns,avg_words_per_board_turn,multi_question_turns,possible_praise_slips,finish_interview_calls,save_profile_calls,median_eou_delay_s,median_llm_ttft_s,median_tts_ttfb_s,est_response_latency_s,violations
+d805055c,live,3,18.7,0,0,0,0,1.48,0.72,0.21,2.41,"judge failed: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Your credit bal"
