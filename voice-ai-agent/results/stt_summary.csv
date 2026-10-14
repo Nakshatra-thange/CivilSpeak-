@@ -1,6 +1,6 @@
 system,clips,term_recall,wer,median_latency_s,devanagari_share,errors
-sarvam_v3_codemix_hi-IN,12,0.806,0.509,3.91,0.273,0.0
-sarvam_v4_codemix_en-IN,12,0.917,0.095,2.295,0.0,0.0
-sarvam_v4_codemix_hi-IN,12,0.917,0.424,2.955,0.155,0.0
-sarvam_v4_codemix_unknown,12,0.917,0.339,3.205,0.094,0.0
-sarvam_v4_transcribe_hi-IN,12,0.917,1.002,4.27,0.996,0.0
+sarvam_v3_codemix_hi-IN,12,0.806,0.509,0.33,0.273,0.0
+sarvam_v4_codemix_en-IN,12,0.917,0.095,0.295,0.0,0.0
+sarvam_v4_codemix_hi-IN,12,0.917,0.424,0.26,0.155,0.0
+sarvam_v4_codemix_unknown,12,0.917,0.339,0.265,0.094,0.0
+sarvam_v4_transcribe_hi-IN,12,0.917,1.002,0.35,0.996,0.0

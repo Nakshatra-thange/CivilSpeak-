@@ -6,6 +6,8 @@ import time
 import uuid
 from datetime import datetime
 from pathlib import Path
+from livekit.agents import room_io
+from livekit.plugins import noise_cancellation
 
 from dotenv import load_dotenv
 from livekit.agents import (
