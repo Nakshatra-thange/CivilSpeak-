@@ -1,153 +1,82 @@
-<a href="https://livekit.io/">
-  <img src="./.github/assets/livekit-mark.png" alt="LiveKit logo" width="100" height="100">
-</a>
+# UPSC Personality Test Voice Mock
 
-# LiveKit Agents starter for Python
+A real-time mock UPSC Civil Services Personality Test for English and Hinglish speakers. A voice board generates questions from the candidate's DAF and answers, asks follow-ups, and returns six-dimension feedback from a separate evaluator model.
 
-A starter project for building voice AI apps with [LiveKit Agents for Python](https://github.com/livekit/agents) and [LiveKit Cloud](https://cloud.livekit.io/).
+## Architecture
 
-The starter includes:
-
-- A simple [voice AI assistant](https://docs.livekit.io/agents/start/voice-ai/) to extend and customize.
-- A voice pipeline built on [LiveKit Inference](https://docs.livekit.io/agents/models/inference/), which gives you access to [models](https://docs.livekit.io/agents/models/) from top labs with no extra configuration:
-  - The default LLM is Gemma 4 31B, an open-weight model [hosted by LiveKit](https://docs.livekit.io/agents/models/llm/livekit/) and tuned for voice AI.
-  - The default TTS is [Fish Audio S2.1 Pro](https://docs.livekit.io/agents/models/tts/fishaudio/), an expressive and cost-effective voice.
-  - More than 50 other models are available from OpenAI, Cartesia, Deepgram, and other providers.
-  - [Realtime models](https://docs.livekit.io/agents/models/realtime/) and many others are available through the [plugin ecosystem](https://docs.livekit.io/agents/models/#plugins).
-- [Expressive mode](https://docs.livekit.io/agents/models/tts/expressive/), on by default, so your agent's voice carries emotion and pacing that fit the conversation.
-- [Keyterms](https://docs.livekit.io/agents/models/stt/keyterms/), on by default, so speech recognition gets your names, brands, and jargon right, including names it picks up during the conversation, like a caller's.
-- [LiveKit Turn Detector](https://docs.livekit.io/agents/logic/turns/turn-detector/), which knows when the user has finished speaking, in 14 languages.
-- [Adaptive interruption handling](https://docs.livekit.io/agents/logic/turns/adaptive-interruption-handling/), which tells a real interruption from an "uh-huh" or background noise, so your agent doesn't stop talking when it shouldn't.
-- [Background voice cancellation](https://docs.livekit.io/transport/media/noise-cancellation/).
-- Session transcripts, traces, and recordings from LiveKit [Agent Observability](https://docs.livekit.io/testing/observability/).
-- [Simulations](https://docs.livekit.io/testing/simulations/) that test full conversations with your agent, run in CI on every merge to `main`.
-- A `Dockerfile` for [deploying to LiveKit Cloud](https://docs.livekit.io/deploy/agents/).
-
-The starter works with any [custom web or mobile frontend](https://docs.livekit.io/frontends/) or with [telephony](https://docs.livekit.io/telephony/).
-
-## Using coding agents
-
-This project works with coding agents like [Claude Code](https://claude.com/product/claude-code), [Cursor](https://www.cursor.com/), and [Codex](https://openai.com/codex/).
-
-LiveKit offers both a CLI and an [MCP server](https://docs.livekit.io/reference/developer-tools/docs-mcp/) for browsing and searching its documentation. Search returns short excerpts, so fetch the full page to read the details:
-
-```console
-lk docs search "testing my agent"
-lk docs get-page /testing/unit-tests
+```mermaid
+flowchart LR
+  Mic[Candidate microphone] --> LK[LiveKit AgentSession]
+  LK --> VAD[VAD and turn detector]
+  VAD --> STT[Sarvam saaras:v4 codemix en-IN]
+  STT --> Board[LiveKit Inference Gemma board]
+  Board --> TTS[Sarvam bulbul:v3]
+  TTS --> Speaker[Candidate speaker]
+  Board -->|save_profile| DB[(SQLite DAF and interview history)]
+  Board -->|finish or session shutdown| Eval[OpenRouter evaluator]
+  Eval --> Scores[Six scores and feedback]
+  DB --> Dashboard[Streamlit progress dashboard]
 ```
 
-The project also includes an [`AGENTS.md`](AGENTS.md) file and LiveKit's [agent skills](https://docs.livekit.io/intro/coding-agents/#agent-skills), so your coding agent follows LiveKit's best practices for workflows, handoffs, and testing, and tries its changes with the [agent debugger](https://docs.livekit.io/testing/debugger/). See the [coding agents guide](https://docs.livekit.io/intro/coding-agents/) for more details, including MCP server setup and how to update the skill.
+The board LLM generates each question; there is no fixed question bank or RAG. The board does not score itself. At the end of an interview, the transcript goes to a separate evaluator for clarity, depth, balance, awareness, authenticity, and composure. Shutdown evaluation is a backstop for calls that end before the board invokes its tool. Speech uses a cascaded STT → LLM → TTS pipeline so transcripts and evaluation inputs remain available.
 
-## Dev setup
+## Run locally
 
-Install the [LiveKit CLI](https://docs.livekit.io/intro/basics/cli/), version 2.18.8 or later:
+This repository's Python project is in this directory. It uses Python 3.12 and `uv`.
 
-- **macOS:** `brew install livekit-cli`
-- **Linux:** `curl -sSL https://get.livekit.io/cli | bash`
-- **Windows:** `winget install LiveKit.LiveKitCLI`
-
-Check your version with `lk --version`. To update an existing install, see [Update the CLI](https://docs.livekit.io/reference/developer-tools/livekit-cli/#updates).
-
-Then create a project from this template. The CLI clones the template and configures your environment:
-
-```console
-lk cloud auth
-lk agent init my-agent --template agent-starter-python
+```bash
+uv sync --dev
+cp .env.example .env.local
+# Fill in LiveKit and Sarvam credentials in .env.local.
+uv run src/agent.py dev
 ```
 
-<details>
-<summary>Set up the project manually</summary>
+Set `OPENROUTER_API_KEY` in the process environment for post-interview evaluation and the evaluator scripts. The default evaluator is `nvidia/nemotron-3.5-lightning:free`. Optional `LLM_FALLBACK_MODELS` accepts comma-separated OpenRouter model IDs; fallback models may be paid, so configure only models you intend to use. Calls are serialized and spaced by 3.1 seconds by default; change with `OPENROUTER_MIN_INTERVAL` if your provider limit differs. `OPENROUTER_RETRIES` defaults to five; server-provided `Retry-After` delays take priority.
 
-Clone the repository and install dependencies into a virtual environment with [uv](https://docs.astral.sh/uv/):
+For a public demo, set `DEMO_MODE=true` in the agent process. This bypasses shared SQLite state and local transcript/evaluation files, disables LiveKit session recording, and applies the 15-minute cap.
 
-```console
-git clone https://github.com/livekit-examples/agent-starter-python.git
-cd agent-starter-python
-uv sync
+Run the dashboard:
+
+```bash
+uv run streamlit run dashboard/app.py
 ```
 
-Sign up for [LiveKit Cloud](https://cloud.livekit.io/), then copy `.env.example` to `.env.local` and fill it in. To have the CLI write your project's URL and API keys into the file instead, run:
+## Evaluation
 
-```console
-lk cloud auth
-lk app env --write --destination .env.local
+```bash
+uv run python evals/run_all.py
 ```
 
-</details>
+This runs the Sarvam clip benchmark, resumable synthetic interviews, and transcript judge, then writes CSVs and `results/SUMMARY.md`. The STT run requires a Sarvam API key. The OpenRouter simulations and LLM judge require an OpenRouter key and are subject to account and provider limits. For local-only board metrics, use `--no-llm`; skip metered stages with `--skip-stt` or `--skip-sim`.
 
-## Run the agent
+### Recorded results
 
-The `lk agent console`, `lk agent dev`, and `lk agent debugger` commands run your agent on your own machine. To talk to it in your terminal:
+The STT benchmark currently has 12 read-aloud clips from one speaker. With `saaras:v4`, `codemix`, and `en-IN`, term recall is 0.917, WER is 0.095, and median batch transcription latency is 2.295 seconds. WER is not comparable across scripts. This is a small read-aloud benchmark, not streaming latency or general Hindi-medium performance. Observed confusions include “Directive Principles” and “Tibetan plateau.”
 
-```console
-lk agent console
-```
+Four earlier live transcripts averaged 8.75 board turns and 26.5 words per board turn, with no multi-question turns or praise slips. The measured median components averaged about 0.73 seconds for end-of-turn, 0.62 seconds for LLM first token, and 0.22 seconds for TTS first byte (about 1.56 seconds total). Those four sessions all lacked a `finish_interview` tool call; shutdown evaluation has since been added, and these historical measurements do not verify that new lifecycle in a live call.
 
-To connect it to LiveKit Cloud so a frontend, a phone call, or the [Agent Console](https://docs.livekit.io/testing/agent-console/) can reach it:
+The earlier single completed simulated persona (“vague”) received an overall 7.0/10. That is a weak evaluator-validity result; the four-persona ranking has not been established. Simulations measure prompt compliance on the selected OpenRouter simulation model, not on production Gemma. Small samples and model/provider variance limit conclusions.
 
-```console
-lk agent dev
-```
+## Privacy and demo mode
 
-To let a coding agent or a script test it one text turn at a time, use the [agent debugger](https://docs.livekit.io/testing/debugger/). Each turn prints the agent's reply along with the tool calls and handoffs behind it:
+With `DEMO_MODE=true`, the agent skips SQLite reads and writes, local transcript/evaluation files, and LiveKit session recording. Profile details and evaluation stay in the active session and are not stored by this application. Sessions have a 15-minute limit. LiveKit Cloud still processes the realtime media needed to carry the call; with Agent Observability enabled, LiveKit may retain transcripts, traces, logs, and recordings for up to 30 days, so this app sets `record=False` in demo mode. Review the LiveKit project settings and the current provider policies before making a public deployment.
 
-```console
-lk agent debugger start
-lk agent debugger say "Hi, what can you do?"
-lk agent debugger stop
-```
+Do not put secrets in the repository. `.env.local`, `.env.deploy`, the SQLite database, transcripts, evaluations, and recorded WAV clips are excluded by `.gitignore`.
 
-In production, run the agent directly:
+## Known limitations and roadmap
 
-```console
-uv run src/agent.py start
-```
+- English-first Hinglish STT clips, one speaker; Hindi-medium accuracy is untested.
+- Voice-only scoring cannot assess facial expression or other non-verbal communication.
+- The board's current-affairs knowledge may be stale; it asks candidates to explain recent developments rather than inventing specifics.
+- DAF PDF upload, a current-affairs source, per-user accounts, and a hosted database are roadmap items.
+- The evaluator is a separate LLM and can be unavailable or inconsistent; scores should be reviewed as coaching feedback, not official UPSC assessment.
 
-## Frontends and telephony
+## Project layout
 
-Pair the agent with a prebuilt frontend starter, or add telephony:
-
-| Platform | Link | Description |
-|----------|----------|-------------|
-| **Web** | [`livekit-examples/agent-starter-react`](https://github.com/livekit-examples/agent-starter-react) | Web voice AI assistant with React & Next.js |
-| **iOS/macOS** | [`livekit-examples/agent-starter-swift`](https://github.com/livekit-examples/agent-starter-swift) | Native iOS, macOS, and visionOS voice AI assistant |
-| **Flutter** | [`livekit-examples/agent-starter-flutter`](https://github.com/livekit-examples/agent-starter-flutter) | Cross-platform voice AI assistant app |
-| **React Native** | [`livekit-examples/voice-assistant-react-native`](https://github.com/livekit-examples/voice-assistant-react-native) | Native mobile app with React Native & Expo |
-| **Android** | [`livekit-examples/agent-starter-android`](https://github.com/livekit-examples/agent-starter-android) | Native Android app with Kotlin & Jetpack Compose |
-| **Web Embed** | [`livekit-examples/agent-starter-embed`](https://github.com/livekit-examples/agent-starter-embed) | Voice AI widget for any website |
-| **Telephony** | [Documentation](https://docs.livekit.io/telephony/) | Add inbound or outbound calling to your agent |
-
-For more options, see the [frontend guide](https://docs.livekit.io/frontends/).
-
-## Testing and debugging
-
-Simulations run full multi-turn conversations between a simulated user and your agent on LiveKit Cloud, then judge each transcript. The scenarios live in [`scenarios.yaml`](scenarios.yaml). Run them locally with the CLI:
-
-```console
-lk agent simulate text --scenarios scenarios.yaml
-```
-
-The `Simulations` workflow in [`.github/workflows/simulations.yml`](.github/workflows/simulations.yml) runs the same file on every merge to `main`, and on demand from the Actions tab. It doesn't run on every pull request push because each run uses real inference. See the [simulations guide](https://docs.livekit.io/testing/simulations/) for how to write scenarios and read results.
-
-To check a change turn by turn without a live session, use the [agent debugger](https://docs.livekit.io/testing/debugger/) shown in [Run the agent](#run-the-agent).
-
-To debug a running agent, open it in the [Agent Console](https://docs.livekit.io/testing/agent-console/). It shows events, tool calls, and model timing as you talk to the agent. To stream logs from a deployed agent, run `lk agent logs`.
-
-## Using this template for your own project
-
-After you create your own project from this template:
-
-- **Commit `uv.lock`.** The template doesn't track it, but your project should, for reproducible builds. If you deploy to LiveKit Cloud, commit `livekit.toml` too.
-- **Add repository secrets.** Add `LIVEKIT_URL`, `LIVEKIT_API_KEY`, and `LIVEKIT_API_SECRET` as [repository secrets](https://docs.github.com/en/actions/how-tos/writing-workflows/choosing-what-your-workflow-does/using-secrets-in-github-actions) so the simulations can run in CI.
-
-## Deploying to production
-
-To deploy the agent to LiveKit Cloud or another environment with the included `Dockerfile`, see the [deployment guide](https://docs.livekit.io/deploy/agents/).
-
-## Self-hosted LiveKit
-
-You can self-host LiveKit instead of using LiveKit Cloud. See the [self-hosting guide](https://docs.livekit.io/transport/self-hosting/local/). If you self-host, use [model plugins](https://docs.livekit.io/agents/models/#plugins) instead of LiveKit Inference, and remove the [LiveKit Cloud noise cancellation](https://docs.livekit.io/transport/media/noise-cancellation/) plugin.
-
-## License
-
-This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+- `src/agent.py`: LiveKit session, board tools, lifecycle and post-call evaluation
+- `src/prompts.py`: board persona, speech rules, interview variety and candidate history
+- `src/db.py`: local SQLite profile and interview history
+- `src/evaluator.py`, `src/llm_client.py`: separate OpenRouter evaluator and resilient HTTP client
+- `src/session_log.py`: transcript/latency capture and shutdown evaluation hook
+- `evals/`: STT clips, simulations, transcript judge and combined runner
+- `dashboard/app.py`: Streamlit progress and quality dashboard

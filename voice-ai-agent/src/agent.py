@@ -1,23 +1,22 @@
 import asyncio
 import json
 import logging
+import os
+import time
 import uuid
 from datetime import datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
-
-import db
-from evaluator import evaluate
-from prompts import build_instructions
-from session_log import attach_logging, history_to_turns
-
 from livekit.agents import (
     Agent,
     AgentServer,
     AgentSession,
+    ChatContext,
+    ChatMessage,
     JobContext,
     RunContext,
+    StopResponse,
     STTContextOptions,
     TurnHandlingOptions,
     cli,
@@ -25,10 +24,17 @@ from livekit.agents import (
     inference,
     room_io,
 )
+from livekit.plugins import ai_coustics, sarvam
 
-from livekit.plugins import ai_coustics
-from livekit.plugins import sarvam
-
+import db
+from evaluator import evaluate
+from prompts import build_instructions, pick_focus_areas
+from session_log import (
+    attach_logging,
+    candidate_answer_count,
+    history_to_turns,
+    recent_board_questions,
+)
 
 # ============================================================
 # CONFIG
@@ -37,34 +43,144 @@ from livekit.plugins import sarvam
 load_dotenv(".env.local")
 
 logger = logging.getLogger("upsc-board")
+DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() in {"1", "true", "yes"}
 
-EVALS_DIR = (
-    Path(__file__).resolve().parent.parent / "data" / "evals"
-)
+EVALS_DIR = Path(__file__).resolve().parent.parent / "data" / "evals"
 
 
 # ============================================================
 # ASSISTANT
 # ============================================================
 
+
 class Assistant(Agent):
     def __init__(self) -> None:
 
         super().__init__(
-            # Keep this because your current AgentSession
-            # does not configure an LLM separately.
-            llm=inference.LLM(
-                model="google/gemma-4-31b-it"
-            ),
-
+            llm=inference.LLM(model="google/gemma-4-31b-it"),
             instructions=build_instructions(
-                db.get_profile(),
-                db.recent_interviews(),
-                db.weakest_dimension(),
+                {} if DEMO_MODE else db.get_profile(),
+                [] if DEMO_MODE else db.recent_interviews(),
+                None if DEMO_MODE else db.weakest_dimension(),
+                past_questions=[] if DEMO_MODE else recent_board_questions(),
+                focus_areas=pick_focus_areas(),
             ),
         )
 
         self.session_id = uuid.uuid4().hex[:8]
+        self.started_at = time.monotonic()
+        self.intensity = "standard"
+        self.evaluation_saved = False
+        self.auto_closing = False
+        self.auto_close_task = None
+
+    async def on_user_turn_completed(
+        self, turn_ctx: ChatContext, new_message: ChatMessage
+    ) -> None:
+        """Enforce a maximum interview length before the board generates its next reply."""
+        items = turn_ctx.items
+        intensity_index = max(
+            (
+                i
+                for i, item in enumerate(items)
+                if getattr(item, "role", None) == "assistant"
+                and "intensity" in (getattr(item, "text_content", "") or "").lower()
+            ),
+            default=-1,
+        )
+        question_count = sum(
+            1
+            for item in items[intensity_index + 1 :]
+            if getattr(item, "role", None) == "assistant"
+            and "?" in (getattr(item, "text_content", "") or "")
+        )
+        if intensity_index >= 0 and (
+            question_count >= 10 or time.monotonic() - self.started_at >= 12 * 60
+        ):
+            self.auto_closing = True
+            turns, _ = history_to_turns(turn_ctx.to_dict())
+            latest = getattr(new_message, "text_content", "") or ""
+            turns.append({"role": "user", "text": latest})
+            self.auto_close_task = asyncio.create_task(self._close_automatically(turns))
+            raise StopResponse()
+
+    async def _close_automatically(self, turns: list[dict]) -> None:
+        session = self.session
+        try:
+            await session.say("Thank you. The board will take a moment to deliberate.")
+            result = await self._evaluate_and_save(turns, timeout=45, retries=3)
+            if result.get("scores"):
+                message = (
+                    f"Your overall score is {result['overall']} out of 10. "
+                    f"Your strongest area was {', '.join(result['strengths']) or 'your interview performance'}. "
+                    f"Your area to improve is {result['weakest']}. "
+                    f"{'; '.join(result['improvements'])}"
+                )
+            else:
+                message = (
+                    "I could not retrieve the full score right now. The interview has been saved "
+                    "for evaluation after the call. Please review your answers for clarity and examples."
+                )
+            await session.say(message)
+        except Exception:
+            logger.exception("automatic interview close failed")
+        finally:
+            await session.shutdown(drain=True)
+
+    async def _evaluate_and_save(
+        self, turns: list[dict], *, timeout: float, retries: int
+    ) -> dict:
+        eval_path = EVALS_DIR / f"{self.session_id}.json"
+        if self.evaluation_saved and eval_path.exists():
+            return json.loads(eval_path.read_text(encoding="utf-8"))
+        answer_count = candidate_answer_count(turns)
+        if not DEMO_MODE:
+            EVALS_DIR.mkdir(parents=True, exist_ok=True)
+        if answer_count < 3:
+            return {"too_short": True}
+        try:
+            result = await evaluate(turns, timeout=timeout, retries=retries)
+            if result.get("too_short"):
+                return result
+            overall = round(sum(result["scores"].values()) / len(result["scores"]), 1)
+            weakest = min(result["scores"], key=result["scores"].get)
+            if not DEMO_MODE:
+                overall, weakest = await asyncio.to_thread(
+                    db.save_interview,
+                    self.intensity,
+                    result["scores"],
+                    ", ".join(result["topics"]),
+                    result["summary"],
+                )
+            record = {
+                "created_at": datetime.now().isoformat(timespec="seconds"),
+                "intensity": self.intensity,
+                "overall": overall,
+                "weakest": weakest,
+                **result,
+            }
+            if not DEMO_MODE:
+                eval_path.write_text(
+                    json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8"
+                )
+                self.evaluation_saved = True
+                logger.info("Interview evaluation saved: %s", eval_path)
+            return record
+        except Exception as exc:
+            logger.exception("evaluation failed for session %s", self.session_id)
+            record = {
+                "created_at": datetime.now().isoformat(timespec="seconds"),
+                "session_id": self.session_id,
+                "intensity": self.intensity,
+                "evaluation_failed": True,
+                "error": str(exc)[:300],
+                "candidate_answers": answer_count,
+            }
+            if not DEMO_MODE:
+                eval_path.write_text(
+                    json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8"
+                )
+            return record
 
     # ========================================================
     # SAVE PROFILE
@@ -97,21 +213,19 @@ class Assistant(Agent):
             medium: Preferred interview language, English or Hindi.
         """
 
-        fields = dict(
-            name=name,
-            hometown=hometown,
-            education=education,
-            optional_subject=optional_subject,
-            hobbies=hobbies,
-            work_experience=work_experience,
-            service_preference=service_preference,
-            medium=medium,
-        )
+        fields = {
+            "name": name,
+            "hometown": hometown,
+            "education": education,
+            "optional_subject": optional_subject,
+            "hobbies": hobbies,
+            "work_experience": work_experience,
+            "service_preference": service_preference,
+            "medium": medium,
+        }
 
-        await asyncio.to_thread(
-            db.save_profile,
-            fields,
-        )
+        if not DEMO_MODE:
+            await asyncio.to_thread(db.save_profile, fields)
 
         return "Saved."
 
@@ -125,8 +239,8 @@ class Assistant(Agent):
         context: RunContext,
         intensity: str,
     ) -> str:
-        """Evaluate and save the interview. Call once at the end, after telling the candidate
-        the board needs a moment to deliberate.
+        """Evaluate and save the interview after the board closes or the candidate asks to stop.
+        The live attempt is brief; shutdown retries and persists an evaluation artifact.
 
         Args:
             intensity: gentle, standard or tough.
@@ -136,36 +250,28 @@ class Assistant(Agent):
         # Get current session
         # ----------------------------------------------------
 
-        session = (
-            getattr(context, "session", None)
-            or self.session
-        )
+        session = getattr(context, "session", None) or self.session
 
         # ----------------------------------------------------
         # Extract conversation history
         # ----------------------------------------------------
 
-        turns, _ = history_to_turns(
-            session.history.to_dict()
-        )
+        turns, _ = history_to_turns(session.history.to_dict())
 
         # ----------------------------------------------------
         # Evaluate interview
         # ----------------------------------------------------
 
+        self.intensity = intensity.lower().strip()
+        if self.intensity not in db.INTENSITIES:
+            self.intensity = "standard"
         try:
-            result = await evaluate(turns)
-
+            result = await asyncio.wait_for(
+                self._evaluate_and_save(turns, timeout=10, retries=1), timeout=12
+            )
         except Exception:
-            logger.exception(
-                "evaluation failed"
-            )
-
-            return (
-                "Evaluation failed. "
-                "Give brief qualitative feedback only "
-                "and do not mention any scores."
-            )
+            logger.exception("in-call evaluation timed out")
+            return "Evaluation is taking longer than expected. Give brief qualitative feedback only and do not mention scores. The full evaluation will be saved after the call."
 
         # ----------------------------------------------------
         # Check whether there were enough answers
@@ -177,75 +283,22 @@ class Assistant(Agent):
                 "Tell the candidate you need a few more answers "
                 "and continue the interview."
             )
+        if result.get("evaluation_failed"):
+            return "Evaluation is unavailable right now. Give brief qualitative feedback only and do not mention any scores. The full evaluation will be saved after the call."
 
-        # ----------------------------------------------------
-        # Normalize intensity
-        # ----------------------------------------------------
-
-        intensity = intensity.lower().strip()
-
-        if intensity not in db.INTENSITIES:
-            intensity = "standard"
-
-        # ----------------------------------------------------
-        # Save interview to database
-        # ----------------------------------------------------
-
-        overall, weakest = await asyncio.to_thread(
-            db.save_interview,
-            intensity,
-            result["scores"],
-            ", ".join(result["topics"]),
-            result["summary"],
-        )
-
-        # ----------------------------------------------------
-        # Save detailed evaluation JSON
-        # ----------------------------------------------------
-
-        EVALS_DIR.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
-
-        record = {
-            "created_at": datetime.now().isoformat(
-                timespec="seconds"
-            ),
-            "intensity": intensity,
-            "overall": overall,
-            "weakest": weakest,
-            **result,
-        }
-
-        eval_path = (
-            EVALS_DIR
-            / f"{self.session_id}.json"
-        )
-
-        eval_path.write_text(
-            json.dumps(
-                record,
-                ensure_ascii=False,
-                indent=2,
-            ),
-            encoding="utf-8",
-        )
-
-        logger.info(
-            "Interview evaluation saved: %s",
-            eval_path,
-        )
+        overall, weakest = result["overall"], result["weakest"]
 
         # ----------------------------------------------------
         # Format factual slips
         # ----------------------------------------------------
 
-        slips = "; ".join(
-            f"{s.get('claim', '')} -> "
-            f"{s.get('correction', '')}"
-            for s in result["factual_slips"]
-        ) or "none"
+        slips = (
+            "; ".join(
+                f"{s.get('claim', '')} -> {s.get('correction', '')}"
+                for s in result["factual_slips"]
+            )
+            or "none"
+        )
 
         # ----------------------------------------------------
         # Return evaluation to LLM
@@ -272,9 +325,8 @@ server = AgentServer()
 # VOICE SESSION
 # ============================================================
 
-@server.rtc_session(
-    agent_name="voice-ai-agent"
-)
+
+@server.rtc_session(agent_name="voice-ai-agent")
 async def my_agent(ctx: JobContext):
 
     ctx.log_context_fields = {
@@ -291,23 +343,19 @@ async def my_agent(ctx: JobContext):
     # ========================================================
 
     session = AgentSession(
-
         # ----------------------------------------------------
         # SARVAM STT
         # ----------------------------------------------------
-
         stt=sarvam.STT(
-            language="hi-IN",
+            language="en-IN",
             model="saaras:v4",
             mode="codemix",
             sample_rate=16000,
             high_vad_sensitivity=True,
         ),
-
         # ----------------------------------------------------
         # STT CONTEXT
         # ----------------------------------------------------
-
         stt_context_options=STTContextOptions(
             keyterms=[
                 "LiveKit",
@@ -341,11 +389,9 @@ async def my_agent(ctx: JobContext):
                 "enabled": True,
             },
         ),
-
         # ----------------------------------------------------
         # SARVAM TTS
         # ----------------------------------------------------
-
         tts=sarvam.TTS(
             target_language_code="hi-IN",
             model="bulbul:v3",
@@ -353,27 +399,26 @@ async def my_agent(ctx: JobContext):
             speech_sample_rate=22050,
             pace=1.0,
         ),
-
         # ----------------------------------------------------
         # TURN DETECTION
         # ----------------------------------------------------
-
         turn_handling=TurnHandlingOptions(
             turn_detection=inference.TurnDetector(),
-
             interruption={
                 "mode": "adaptive",
             },
-
             preemptive_generation={
                 "enabled": True,
             },
+            endpointing={
+                "mode": "fixed",
+                "min_delay": 1.5,  # wait at least 1.5 s of silence before treating your turn as finished
+                "max_delay": 6.0,  # upper bound when the turn detector thinks you are mid-thought
+            },
         ),
-
         # ----------------------------------------------------
         # EXPRESSIVE VOICE
         # ----------------------------------------------------
-
         expressive=True,
     )
 
@@ -381,6 +426,8 @@ async def my_agent(ctx: JobContext):
     # CREATE ASSISTANT
     # ========================================================
 
+    if not DEMO_MODE:
+        db.init_db()
     assistant = Assistant()
 
     # ========================================================
@@ -390,14 +437,12 @@ async def my_agent(ctx: JobContext):
     await session.start(
         agent=assistant,
         room=ctx.room,
-
+        record=not DEMO_MODE,
         room_options=room_io.RoomOptions(
             audio_input=room_io.AudioInputOptions(
                 noise_cancellation=(
                     ai_coustics.audio_enhancement(
-                        model=(
-                            ai_coustics.EnhancerModel.QUAIL_VF_S
-                        )
+                        model=(ai_coustics.EnhancerModel.QUAIL_VF_S)
                     )
                 ),
             ),
@@ -412,6 +457,14 @@ async def my_agent(ctx: JobContext):
         ctx,
         session,
         assistant.session_id,
+        on_shutdown=(
+            None
+            if DEMO_MODE
+            else lambda turns: assistant._evaluate_and_save(
+                turns, timeout=45, retries=3
+            )
+        ),
+        persist_transcript=not DEMO_MODE,
     )
 
     # ========================================================
@@ -419,6 +472,30 @@ async def my_agent(ctx: JobContext):
     # ========================================================
 
     await ctx.connect()
+
+    if DEMO_MODE:
+
+        async def _demo_session_cap():
+            await asyncio.sleep(15 * 60)
+            handle = session.generate_reply(
+                instructions=(
+                    "The 15-minute demo limit has been reached. Thank the candidate briefly, "
+                    "say the mock interview is ending, and do not call any tools."
+                ),
+                tool_choice="none",
+            )
+            try:
+                await asyncio.wait_for(handle, timeout=20)
+            except asyncio.TimeoutError:
+                logger.warning("demo close speech exceeded its deadline")
+            await session.shutdown(drain=True)
+
+        cap_task = asyncio.create_task(_demo_session_cap())
+
+        @session.on("close")
+        def _cancel_demo_cap(_event):
+            if asyncio.current_task() is not cap_task:
+                cap_task.cancel()
 
     logger.info(
         "Connected to LiveKit room: %s",

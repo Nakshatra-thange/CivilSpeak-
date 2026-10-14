@@ -6,7 +6,11 @@ import pandas as pd
 import streamlit as st
 
 ROOT = Path(__file__).resolve().parent.parent
-EVALS, TRANSCRIPTS, RESULTS = ROOT / "data" / "evals", ROOT / "data" / "transcripts", ROOT / "results"
+EVALS, TRANSCRIPTS, RESULTS = (
+    ROOT / "data" / "evals",
+    ROOT / "data" / "transcripts",
+    ROOT / "results",
+)
 DIMS = ["clarity", "depth", "balance", "awareness", "authenticity", "composure"]
 
 st.set_page_config(page_title="UPSC Interview Mentor", layout="wide")
@@ -16,23 +20,40 @@ st.title("UPSC Interview Mock: Progress Dashboard")
 def load_evals() -> list[dict]:
     rows = []
     for p in sorted(EVALS.glob("*.json")):
-        d = json.loads(p.read_text(encoding="utf-8"))
+        try:
+            d = json.loads(p.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
         d["session_id"] = p.stem
         rows.append(d)
     return rows
 
 
-evals = load_evals()
+all_evals = load_evals()
+evals = [e for e in all_evals if isinstance(e.get("scores"), dict) and "overall" in e]
+failed_evals = [e for e in all_evals if e not in evals]
 tab1, tab2, tab3 = st.tabs(["Progress", "Interview detail", "System quality (evals)"])
 
 with tab1:
     if not evals:
         st.info("No completed interviews yet. Run a mock interview first.")
+        if failed_evals:
+            st.warning(
+                f"{len(failed_evals)} interview(s) are awaiting a successful evaluation."
+            )
     else:
-        df = pd.DataFrame([{
-            "when": e["created_at"], "intensity": e["intensity"], "overall": e["overall"],
-            "weakest": e["weakest"], **e["scores"],
-        } for e in evals]).sort_values("when")
+        df = pd.DataFrame(
+            [
+                {
+                    "when": e["created_at"],
+                    "intensity": e["intensity"],
+                    "overall": e["overall"],
+                    "weakest": e["weakest"],
+                    **e["scores"],
+                }
+                for e in evals
+            ]
+        ).sort_values("when")
         c1, c2 = st.columns(2)
         c1.metric("Interviews completed", len(df))
         c2.metric("Latest overall score", f"{df.iloc[-1]['overall']} / 10")
@@ -41,7 +62,7 @@ with tab1:
         st.subheader("Average by dimension")
         st.bar_chart(df[DIMS].mean())
         st.subheader("History")
-        st.dataframe(df[["when", "intensity", "overall", "weakest"]], use_container_width=True)
+        st.dataframe(df[["when", "intensity", "overall", "weakest"]], width="stretch")
 
 with tab2:
     if not evals:
@@ -63,8 +84,12 @@ with tab2:
             if e["factual_slips"]:
                 st.markdown("**Possible factual slips**")
                 for s in e["factual_slips"]:
-                    st.write(f"- {s.get('claim', '')} (correct: {s.get('correction', '')})")
-            st.caption(f"Topics: {', '.join(e['topics'])} | Evaluator: {e.get('model', '?')}")
+                    st.write(
+                        f"- {s.get('claim', '')} (correct: {s.get('correction', '')})"
+                    )
+            st.caption(
+                f"Topics: {', '.join(e['topics'])} | Evaluator: {e.get('model', '?')}"
+            )
         with right:
             tpath = TRANSCRIPTS / f"{pick}.json"
             if tpath.exists():
@@ -79,13 +104,19 @@ with tab2:
                     )
                 st.subheader("Transcript")
                 for turn in t["turns"]:
-                    with st.chat_message("assistant" if turn["role"] == "assistant" else "user"):
+                    with st.chat_message(
+                        "assistant" if turn["role"] == "assistant" else "user"
+                    ):
                         st.write(turn["text"])
             else:
                 st.caption("Transcript file not found.")
 
 with tab3:
     st.caption("Small-sample results from my own recordings and simulated candidates.")
+    if failed_evals:
+        st.warning(
+            f"{len(failed_evals)} evaluation artifact(s) contain errors and are excluded from score charts."
+        )
     for title, fname in [
         ("STT: accuracy and latency by system", "stt_summary.csv"),
         ("STT: UPSC term recall by speaker", "stt_by_speaker.csv"),
@@ -93,11 +124,15 @@ with tab3:
         p = RESULTS / fname
         if p.exists():
             st.subheader(title)
-            st.dataframe(pd.read_csv(p), use_container_width=True)
+            st.dataframe(pd.read_csv(p), width="stretch")
     q = RESULTS / "interview_quality.csv"
     if q.exists():
         st.subheader("Board behaviour audit")
         qd = pd.read_csv(q)
-        st.dataframe(qd.groupby("group").mean(numeric_only=True).round(2), use_container_width=True)
-    if not any((RESULTS / f).exists() for f in ("stt_summary.csv", "interview_quality.csv")):
+        st.dataframe(
+            qd.groupby("group").mean(numeric_only=True).round(2), width="stretch"
+        )
+    if not any(
+        (RESULTS / f).exists() for f in ("stt_summary.csv", "interview_quality.csv")
+    ):
         st.info("Run the scripts in evals/ to populate this tab.")

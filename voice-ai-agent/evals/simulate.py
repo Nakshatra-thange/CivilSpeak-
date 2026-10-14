@@ -1,31 +1,30 @@
 import argparse
 import asyncio
 import json
-import os
 import re
 import sys
 from pathlib import Path
 
-from anthropic import AsyncAnthropic
-from dotenv import load_dotenv
-
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "src"))
-load_dotenv(ROOT / ".env.local")
 
 from evaluator import evaluate  # noqa: E402
+from llm_client import DEFAULT_MODEL, chat  # noqa: E402
 from prompts import build_instructions  # noqa: E402
 from session_log import TRANSCRIPT_DIR  # noqa: E402
 
 N_BOARD_TURNS = 9
-CANDIDATE_MODEL = os.getenv("SIM_CANDIDATE_MODEL", "claude-haiku-5-5")
+CHECKPOINT = ROOT / "results" / "simulation_checkpoint.json"
 
 PROFILE = {
-    "name": "Aarav", "hometown": "Indore, Madhya Pradesh",
-    "education": "BTech Computer Science", "optional_subject": "Public Administration",
+    "name": "Aarav",
+    "hometown": "Indore, Madhya Pradesh",
+    "education": "BTech Computer Science",
+    "optional_subject": "Public Administration",
     "hobbies": "chess, long-distance running, reading history",
     "work_experience": "2 years as a software engineer",
-    "service_preference": "IAS, IFS", "medium": "English",
+    "service_preference": "IAS, IFS",
+    "medium": "English",
 }
 
 PERSONAS = {
@@ -41,61 +40,163 @@ SIM_NOTE = (
 )
 
 
-async def call(client, model, system, messages, max_tokens=300) -> str:
-    r = await client.messages.create(
-        model=model, max_tokens=max_tokens, system=system, messages=messages
-    )
-    return "".join(b.text for b in r.content if getattr(b, "type", "") == "text").strip()
-
-
-async def run_one(client, model, persona, sem) -> dict:
+async def run_one(
+    model: str, persona: str, sem: asyncio.Semaphore, retries: int
+) -> dict:
     async with sem:
-        board_system = build_instructions(PROFILE, [], None) + SIM_NOTE
-        cand_system = (
-            f"You are role-playing a UPSC aspirant in a mock interview. Profile: {json.dumps(PROFILE)}. "
-            f"Behaviour: {PERSONAS[persona]} Reply in 1 to 4 spoken sentences in natural Indian English "
-            "with occasional Hindi words. Never mention that you are an AI or role-playing."
+        try:
+            model_slug = re.sub(r"[^a-z0-9]+", "-", model.lower()).strip("-")
+            slug = f"sim-{model_slug}-{persona}"
+            TRANSCRIPT_DIR.mkdir(parents=True, exist_ok=True)
+            transcript_path = TRANSCRIPT_DIR / f"{slug}.json"
+            checkpoint = (
+                json.loads(CHECKPOINT.read_text()) if CHECKPOINT.exists() else {}
+            )
+            if persona in checkpoint.get(model, {}):
+                result = checkpoint[model][persona]
+                print(f"cached: {persona:10} evaluator overall = {result['overall']}")
+                return {"persona": persona, **result}
+
+            board_system = build_instructions(PROFILE, [], None) + SIM_NOTE
+            cand_system = (
+                f"You are role-playing a UPSC aspirant in a mock interview. Profile: {json.dumps(PROFILE)}. "
+                f"Behaviour: {PERSONAS[persona]} Reply in 1 to 4 spoken sentences in natural Indian English "
+                "with occasional Hindi words. Never mention that you are an AI or role-playing."
+            )
+            opener = "Hello, I am ready. My details are correct, standard intensity please. Let's begin."
+            state_path = CHECKPOINT.with_name(f"simulation-{model_slug}-{persona}.json")
+            if transcript_path.exists() and not state_path.exists():
+                turns = json.loads(transcript_path.read_text(encoding="utf-8"))["turns"]
+                board_msgs, cand_msgs, start_turn = [], [], N_BOARD_TURNS
+            elif state_path.exists():
+                state = json.loads(state_path.read_text(encoding="utf-8"))
+                board_msgs, cand_msgs, turns = (
+                    state["board_msgs"],
+                    state["cand_msgs"],
+                    state["turns"],
+                )
+                start_turn = state["next_turn"]
+            else:
+                board_msgs = [{"role": "user", "content": opener}]
+                cand_msgs = []
+                turns = [{"role": "user", "text": opener}]
+                start_turn = 0
+            for i in range(start_turn, N_BOARD_TURNS):
+                board = await chat(
+                    board_system,
+                    board_msgs,
+                    model=model,
+                    max_tokens=800,
+                    retries=retries,
+                )
+                board_msgs.append({"role": "assistant", "content": board})
+                turns.append({"role": "assistant", "text": board})
+                if i == N_BOARD_TURNS - 1:
+                    break
+                cand_msgs.append({"role": "user", "content": board})
+                cand = await chat(
+                    cand_system, cand_msgs, model=model, max_tokens=600, retries=retries
+                )
+                cand_msgs.append({"role": "assistant", "content": cand})
+                board_msgs.append({"role": "user", "content": cand})
+                turns.append({"role": "user", "text": cand})
+                tmp_state = state_path.with_suffix(".tmp")
+                tmp_state.write_text(
+                    json.dumps(
+                        {
+                            "board_msgs": board_msgs,
+                            "cand_msgs": cand_msgs,
+                            "turns": turns,
+                            "next_turn": i + 1,
+                        },
+                        ensure_ascii=False,
+                    ),
+                    encoding="utf-8",
+                )
+                tmp_state.replace(state_path)
+
+            tmp_state = state_path.with_suffix(".tmp")
+            tmp_state.write_text(
+                json.dumps(
+                    {
+                        "board_msgs": board_msgs,
+                        "cand_msgs": cand_msgs,
+                        "turns": turns,
+                        "next_turn": N_BOARD_TURNS,
+                    },
+                    ensure_ascii=False,
+                ),
+                encoding="utf-8",
+            )
+            tmp_state.replace(state_path)
+            transcript_path.write_text(
+                json.dumps(
+                    {
+                        "session_id": slug,
+                        "source": f"sim:{model}:{persona}",
+                        "model": model,
+                        "persona": persona,
+                        "turns": turns,
+                        "tool_calls": [],
+                        "latency": {},
+                    },
+                    ensure_ascii=False,
+                    indent=2,
+                ),
+                encoding="utf-8",
+            )
+
+            result = await evaluate(turns, retries=retries)
+            overall = None
+            if not result.get("too_short"):
+                overall = round(
+                    sum(result["scores"].values()) / len(result["scores"]), 1
+                )
+            print(f"done: {persona:10} evaluator overall = {overall}")
+            checkpoint = (
+                json.loads(CHECKPOINT.read_text()) if CHECKPOINT.exists() else {}
+            )
+            checkpoint.setdefault(model, {})[persona] = {
+                "overall": overall,
+                "scores": result.get("scores"),
+                "evidence": result.get("evidence"),
+            }
+            CHECKPOINT.parent.mkdir(parents=True, exist_ok=True)
+            tmp_checkpoint = CHECKPOINT.with_suffix(".tmp")
+            tmp_checkpoint.write_text(
+                json.dumps(checkpoint, indent=2), encoding="utf-8"
+            )
+            tmp_checkpoint.replace(CHECKPOINT)
+            state_path.unlink(missing_ok=True)
+            return {"persona": persona, "overall": overall}
+        except Exception as e:
+            print(f"FAILED: {persona}: {e}")
+            return {"persona": persona, "overall": None}
+
+
+async def main(model: str, personas: list[str], retries: int) -> None:
+    sem = asyncio.Semaphore(
+        1
+    )  # OpenRouter free providers are commonly capacity limited.
+    rows = await asyncio.gather(*(run_one(model, p, sem, retries) for p in personas))
+    print(
+        "\nEvaluator validity check (a good evaluator ranks strong above the others):"
+    )
+    for p in personas:
+        vals = [
+            r["overall"] for r in rows if r["persona"] == p and r["overall"] is not None
+        ]
+        print(
+            f"  {p:10} overall = {vals[0]:.1f}"
+            if vals
+            else f"  {p:10} n/a (run failed)"
         )
-        opener = "Hello, I am ready. My details are correct, standard intensity please. Let's begin."
-        board_msgs = [{"role": "user", "content": opener}]
-        cand_msgs: list[dict] = []
-        turns = [{"role": "user", "text": opener}]
-        for i in range(N_BOARD_TURNS):
-            board = await call(client, model, board_system, board_msgs)
-            board_msgs.append({"role": "assistant", "content": board})
-            turns.append({"role": "assistant", "text": board})
-            if i == N_BOARD_TURNS - 1:
-                break
-            cand_msgs.append({"role": "user", "content": board})
-            cand = await call(client, CANDIDATE_MODEL, cand_system, cand_msgs, 250)
-            cand_msgs.append({"role": "assistant", "content": cand})
-            board_msgs.append({"role": "user", "content": cand})
-            turns.append({"role": "user", "text": cand})
-        TRANSCRIPT_DIR.mkdir(parents=True, exist_ok=True)
-        slug = re.sub(r"[^a-z0-9]+", "-", f"sim-{model}-{persona}".lower())
-        (TRANSCRIPT_DIR / f"{slug}.json").write_text(
-            json.dumps({
-                "session_id": slug, "source": f"sim:{model}:{persona}",
-                "turns": turns, "tool_calls": [], "latency": {},
-            }, ensure_ascii=False, indent=2), encoding="utf-8")
-        result = await evaluate(turns)
-        overall = round(sum(result["scores"].values()) / 6, 1) if not result.get("too_short") else None
-        print(f"done: {model:20} {persona:10} evaluator overall = {overall}")
-        return {"model": model, "persona": persona, "overall": overall}
-
-
-async def main(models: list[str]) -> None:
-    client = AsyncAnthropic()
-    sem = asyncio.Semaphore(4)
-    jobs = [run_one(client, m, p, sem) for m in models for p in PERSONAS]
-    rows = await asyncio.gather(*jobs)
-    print("\nEvaluator validity check (should rank strong > others):")
-    for p in PERSONAS:
-        vals = [r["overall"] for r in rows if r["persona"] == p and r["overall"] is not None]
-        print(f"  {p:10} mean overall = {sum(vals) / len(vals):.1f}" if vals else f"  {p:10} n/a")
 
 
 if __name__ == "__main__":
     ap = argparse.ArgumentParser()
-    ap.add_argument("--models", nargs="+", default=["claude-haiku-5-5", "claude-sonnet-5-5"])
-    asyncio.run(main(ap.parse_args().models))
+    ap.add_argument("--model", default=DEFAULT_MODEL)
+    ap.add_argument("--personas", nargs="+", choices=PERSONAS, default=list(PERSONAS))
+    ap.add_argument("--retries", type=int, default=5)
+    args = ap.parse_args()
+    asyncio.run(main(args.model, args.personas, args.retries))

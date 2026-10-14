@@ -1,8 +1,25 @@
+import random
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
 SCRIPT_MODE = "roman"  # "roman" or "devanagari" (keep whichever sounded better in your Day 2 test)
-
+FOCUS_AREAS = [
+    "their home state or district: economy, culture, local administrative problems",
+    "a deep dive into one hobby or interest and what it says about them",
+    "their graduation subject applied to governance or public policy",
+    "a District Magistrate scenario: floods, communal tension, or a corruption complaint",
+    "an ethical dilemma involving a senior's improper order or a friend's wrongdoing",
+    "a current economic issue: inflation, jobs, farm distress, subsidies",
+    "federalism and Centre-State relations",
+    "foreign policy and India's neighbourhood",
+    "environment versus development trade-offs",
+    "internal security and technology: cyber crime, surveillance, border management",
+    "social issues: gender, caste, urban-rural gaps, education, health",
+    "their work experience or a failure they learned from",
+    "why civil services and their preferred service, tested with counter-questions",
+    "their optional subject or a subject they know deeply",
+    "an opinion on a controversial reform, then arguing the other side",
+]
 SCRIPT_RULES = {
     "roman": (
         "Write Hindi words in Roman script (Hinglish), the way people text. "
@@ -15,9 +32,12 @@ SCRIPT_RULES = {
 }
 
 
-def build_instructions(profile=None, interviews=None, weakest=None) -> str:
+def build_instructions(
+    profile=None, interviews=None, weakest=None, past_questions=None, focus_areas=None
+) -> str:
     now = datetime.now(ZoneInfo("Asia/Kolkata")).strftime("%A, %d %B %Y, %I:%M %p IST")
-    return f"""You are the chairperson of a mock UPSC Civil Services Personality Test (interview) board.
+    return (
+        f"""You are the chairperson of a mock UPSC Civil Services Personality Test (interview) board.
 You conduct a realistic interview with an aspirant over a live voice call. You generate every question yourself from your own knowledge and from what the candidate says. There is no fixed question list.
 
 Current date and time: {now}. Use this if the date comes up. Never guess it.
@@ -26,6 +46,9 @@ LANGUAGE
 - Ask the candidate whether they want the interview in English or Hindi, then follow their choice. If they mix, mirror them in natural Hinglish.
 - Keep standard terms in English (Article 21, fiscal deficit, DAF).
 - {SCRIPT_RULES[SCRIPT_MODE]}
+
+SPEECH RECOGNITION NOTE
+- The candidate's words come from Sarvam saaras:v4 codemix recognition. English terms in Hinglish may be imperfectly transcribed; do not silently reinterpret an unclear phrase. Ask a short clarification when meaning matters.
 
 VOICE RULES (your words are spoken aloud)
 - Ask short questions, one at a time, 1 to 2 sentences. Then stop and listen.
@@ -55,19 +78,24 @@ CONDUCTING THE INTERVIEW (about 8 to 10 questions unless they want longer or sho
 - If the candidate states something that sounds factually wrong, politely cross-check in a way a board would: "Are you sure about that?" Note it for the feedback.
 - Vary difficulty. If they handle questions easily, get more analytical. If they struggle, simplify.
 - If they ask you for a hint mid-interview, say a real board would not give one, and offer to discuss it after the interview.
+- If the candidate says "hmm", "let me think" or "give me a moment", reply with a very short "Take your time" and then wait. Never fill their silence with a new question or a hint.
 
 CURRENT AFFAIRS AND FACTS
 - Your knowledge may be outdated. Ask about issues in general terms and ask the candidate to explain recent developments themselves. Do not state specific recent figures, dates, or events unless you are sure. If the candidate mentions something recent that you do not know, ask them to explain it. Never invent facts or case names.
 
 ENDING AND FEEDBACK
 - After about 8 to 10 questions, or when the candidate wants to stop (if they gave at least 3 answers), close the interview politely.
+- If the candidate asks to stop, treat that as an instruction to end now; do not insist on finishing the remaining questions. If they have at least 3 answers, call finish_interview.
 - Say one short line such as "Thank you. The board will take a moment to deliberate." Then call finish_interview with the intensity you used.
 - The tool returns the evaluation. Then speak your feedback in 5 to 7 short sentences using ONLY what the tool returned: their strongest and weakest areas, the two most important improvements, any factual slip worth mentioning, and the overall score out of 10.
 - If the tool says there were too few answers or the evaluation failed, follow its instruction. Never invent scores.
 - Then offer to retry their weakest answer or discuss any topic they were unsure about. For this follow-up you may switch to a teacher role and use your general knowledge. Be honest if you are unsure about a fact.
 
 Stay on UPSC interview preparation. Politely steer back if the candidate goes off topic. Never mention tools, databases, or saving.
-""" + history_block(profile, interviews, weakest)
+"""
+        + history_block(profile, interviews, weakest)
+        + variety_block(past_questions, focus_areas)
+    )
 
 
 def history_block(profile, interviews, weakest) -> str:
@@ -88,4 +116,23 @@ def history_block(profile, interviews, weakest) -> str:
                 "this time, and avoid repeating the same topics as before. Mention they are a "
                 "returning candidate. If they scored well before, suggest a higher intensity.\n"
             )
+    return out
+
+
+def pick_focus_areas(k: int = 4) -> list[str]:
+    return random.sample(FOCUS_AREAS, k)
+
+
+def variety_block(past_questions, focus_areas) -> str:
+    out = "\nVARIETY FOR THIS INTERVIEW\n"
+    if focus_areas:
+        out += "- Build the core of this interview around these areas (any order, with natural follow-ups):\n"
+        out += "".join(f"  - {a}\n" for a in focus_areas)
+    if past_questions:
+        out += (
+            "- These questions were already asked in earlier interviews. Do NOT repeat them or "
+            "close paraphrases. Ask about different things, or go deeper from a new angle:\n"
+        )
+        out += "".join(f"  - {q}\n" for q in past_questions)
+    out += "- Do not open with the same warm-up question as before. Each interview should feel different.\n"
     return out

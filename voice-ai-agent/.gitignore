@@ -11,8 +11,18 @@ KMS
 .pytest_cache
 .ruff_cache
 
+clips/manifest.csv
+
+
 /data/mentor.db
 /data/chroma
+/data/transcripts
+/data/evals
+clips/*.wav
+.env.local
+.env.deploy
+results/simulation_checkpoint.json
+results/simulation-*.json
 
 
 # Claude Code

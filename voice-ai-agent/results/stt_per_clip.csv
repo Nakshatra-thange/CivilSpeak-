@@ -1,13 +1,61 @@
 file,speaker,system,latency_s,wer,term_recall,devanagari_share,hypothesis,error
-clip01.wav,me,sarvam_transcribe,0.0,,,0.0,,[Errno 2] No such file or directory: '/Users/nakshatravijaythange/voice-ai-agent/superkalam/voice-ai-agent/clips/clip01.
-clip01.wav,me,sarvam_codemix,0.0,,,0.0,,[Errno 2] No such file or directory: '/Users/nakshatravijaythange/voice-ai-agent/superkalam/voice-ai-agent/clips/clip01.
-clip01.wav,me,sarvam_translit,0.0,,,0.0,,[Errno 2] No such file or directory: '/Users/nakshatravijaythange/voice-ai-agent/superkalam/voice-ai-agent/clips/clip01.
-clip01.wav,me,deepgram_nova3,0.0,,,0.0,,[Errno 2] No such file or directory: '/Users/nakshatravijaythange/voice-ai-agent/superkalam/voice-ai-agent/clips/clip01.
-clip02.wav,me,sarvam_transcribe,0.0,,,0.0,,[Errno 2] No such file or directory: '/Users/nakshatravijaythange/voice-ai-agent/superkalam/voice-ai-agent/clips/clip02.
-clip02.wav,me,sarvam_codemix,0.0,,,0.0,,[Errno 2] No such file or directory: '/Users/nakshatravijaythange/voice-ai-agent/superkalam/voice-ai-agent/clips/clip02.
-clip02.wav,me,sarvam_translit,0.0,,,0.0,,[Errno 2] No such file or directory: '/Users/nakshatravijaythange/voice-ai-agent/superkalam/voice-ai-agent/clips/clip02.
-clip02.wav,me,deepgram_nova3,0.0,,,0.0,,[Errno 2] No such file or directory: '/Users/nakshatravijaythange/voice-ai-agent/superkalam/voice-ai-agent/clips/clip02.
-clip03.wav,friend1,sarvam_transcribe,0.0,,,0.0,,[Errno 2] No such file or directory: '/Users/nakshatravijaythange/voice-ai-agent/superkalam/voice-ai-agent/clips/clip03.
-clip03.wav,friend1,sarvam_codemix,0.0,,,0.0,,[Errno 2] No such file or directory: '/Users/nakshatravijaythange/voice-ai-agent/superkalam/voice-ai-agent/clips/clip03.
-clip03.wav,friend1,sarvam_translit,0.0,,,0.0,,[Errno 2] No such file or directory: '/Users/nakshatravijaythange/voice-ai-agent/superkalam/voice-ai-agent/clips/clip03.
-clip03.wav,friend1,deepgram_nova3,0.0,,,0.0,,[Errno 2] No such file or directory: '/Users/nakshatravijaythange/voice-ai-agent/superkalam/voice-ai-agent/clips/clip03.
+me_01.wav,me,sarvam_v4_transcribe_hi-IN,5.85,0.9333333333333333,1.0,1.0,आर्टिकल 21 के अंडर राइट टू प्राइवेसी का पुट्टस्वामी जजमेंट में रेकग्नाइज किया गया था।,
+me_01.wav,me,sarvam_v4_codemix_hi-IN,1.83,0.4666666666666667,1.0,0.13114754098360656,Article 21 के under Right to Privacy का Puttaswamy judgment में recognize किया गया था।,
+me_01.wav,me,sarvam_v4_codemix_en-IN,6.54,0.13333333333333333,1.0,0.0,Article 21 ke under Right to Privacy ka Puttaswamy Judgment mein recognize kiya gaya tha.,
+me_01.wav,me,sarvam_v4_codemix_unknown,6.36,0.4666666666666667,1.0,0.13114754098360656,Article 21 के under Right to Privacy का Puttaswamy judgment में recognize किया गया था।,
+me_01.wav,me,sarvam_v3_codemix_hi-IN,7.11,0.4666666666666667,1.0,0.13114754098360656,Article 21 के under Right to Privacy का Puttaswamy judgment में recognize किया गया था,
+me_02.wav,me,sarvam_v4_transcribe_hi-IN,4.25,1.125,1.0,1.0,बेसिक स्ट्रक्चर डॉक्ट्रिन केस केशवानंदा भारती केस से आई।,
+me_02.wav,me,sarvam_v4_codemix_hi-IN,5.71,0.75,1.0,0.35,Basic Structure Doctrine इन के केशवानंदा भारती case से आई।,
+me_02.wav,me,sarvam_v4_codemix_en-IN,2.64,0.5,1.0,0.0,Basic Structure Doctrine In Kesavananda BharatiCase Se Aai.,
+me_02.wav,me,sarvam_v4_codemix_unknown,3.77,0.5,1.0,0.0,Basic Structure Doctrine In Kesavananda BharatiCase Se Aai.,
+me_02.wav,me,sarvam_v3_codemix_hi-IN,2.04,0.625,1.0,0.3157894736842105,Basic Structure Doctrine के केशवानंदा भारती Case से आई,
+me_03.wav,me,sarvam_v4_transcribe_hi-IN,2.55,1.0714285714285714,0.5,1.0,मॉनसून में आईटीसीजेड का नॉर्थवर्ड शिफ्ट और तिब्बत एंड प्लेट्यू की हीटिंग इम्पोर्टेन्ट होती है।,
+me_03.wav,me,sarvam_v4_codemix_hi-IN,4.1,0.5714285714285714,0.5,0.125,Monsoon में ITCZ का northward shift और Tibet and Plateau की heating important होती है।,
+me_03.wav,me,sarvam_v4_codemix_en-IN,1.05,0.14285714285714285,0.5,0.0,Monsoon mein ITCZ ka northward shift aur Tibet and Plateau ki heating important hoti hai.,
+me_03.wav,me,sarvam_v4_codemix_unknown,5.08,0.5714285714285714,0.5,0.125,Monsoon में ITCZ का northward shift और Tibet and Plateau की heating important होती है।,
+me_03.wav,me,sarvam_v3_codemix_hi-IN,5.31,0.5714285714285714,0.5,0.125,monsoon में ITCZ का northward shift और Tibet and plateau की heating important होती है,
+me_04.wav,me,sarvam_v4_transcribe_hi-IN,6.66,1.0,1.0,1.0,फिस्कल डेफिसिट और रेवेन्यू डेफिसिट में क्या डिफरेंस होता है?,
+me_04.wav,me,sarvam_v4_codemix_hi-IN,4.39,0.5,1.0,0.17777777777777778,Fiscal deficit और revenue deficit में क्या difference होता है?,
+me_04.wav,me,sarvam_v4_codemix_en-IN,3.29,0.0,1.0,0.0,Fiscal deficit aur revenue deficit mein kya difference hota hai?,
+me_04.wav,me,sarvam_v4_codemix_unknown,4.5,0.5,1.0,0.17777777777777778,Fiscal deficit और revenue deficit में क्या difference होता है?,
+me_04.wav,me,sarvam_v3_codemix_hi-IN,5.4,0.9,0.0,0.7058823529411765,फिस्कल डेसीफिट और रेवेन्यू डेसीफिट में क्या difference होता है,
+me_05.wav,me,sarvam_v4_transcribe_hi-IN,4.58,0.9,1.0,0.9487179487179487,पंचायती राज को 73rd कॉन्स्टिट्यूशनल अमेंडमेंट से कॉन्स्टिट्यूशनल स्टेटस मिला।,
+me_05.wav,me,sarvam_v4_codemix_hi-IN,3.02,0.5,1.0,0.18181818181818182,पंचायती राज को 73rd Constitutional Amendment से Constitutional Status मिला।,
+me_05.wav,me,sarvam_v4_codemix_en-IN,3.16,0.0,1.0,0.0,Panchayati Raj ko 73rd Constitutional Amendment se Constitutional Status mila.,
+me_05.wav,me,sarvam_v4_codemix_unknown,3.41,0.5,1.0,0.18181818181818182,पंचायती राज को 73rd Constitutional Amendment से Constitutional Status मिला।,
+me_05.wav,me,sarvam_v3_codemix_hi-IN,3.88,0.5,1.0,0.18181818181818182,पंचायती राज को 73rd Constitutional Amendment से Constitutional Status मिला,
+me_06.wav,me,sarvam_v4_transcribe_hi-IN,5.14,1.0,1.0,1.0,एज अ डिस्ट्रिक्ट मजिस्ट्रेट आई वुड फर्स्ट एन्श्योर लॉ एंड ऑर्डर एंड देन कोऑर्डिनेट रिलीफ।,
+me_06.wav,me,sarvam_v4_codemix_hi-IN,5.1,0.0,1.0,0.0,"As a District Magistrate, I would first ensure law and order and then coordinate relief.",
+me_06.wav,me,sarvam_v4_codemix_en-IN,2.35,0.0,1.0,0.0,"As a District Magistrate, I would first ensure law and order and then coordinate relief.",
+me_06.wav,me,sarvam_v4_codemix_unknown,3.08,0.0,1.0,0.0,"As a District Magistrate, I would first ensure law and order and then coordinate relief.",
+me_06.wav,me,sarvam_v3_codemix_hi-IN,6.04,0.0,1.0,0.0,As a District Magistrate I would first ensure law and order and then coordinate relief,
+me_07.wav,me,sarvam_v4_transcribe_hi-IN,2.97,1.0,1.0,1.0,फेडरलिज्म का मतलब है पावर का डिवीज़न बिटवीन द सेंटर एंड द स्टेट्स।,
+me_07.wav,me,sarvam_v4_codemix_hi-IN,4.85,0.38461538461538464,1.0,0.1206896551724138,Federalism का मतलब है power का division between the center and the states.,
+me_07.wav,me,sarvam_v4_codemix_en-IN,1.68,0.07692307692307693,1.0,0.0,Federalism ka matlab hai power ka division between the center and the states.,
+me_07.wav,me,sarvam_v4_codemix_unknown,3.33,0.07692307692307693,1.0,0.0,Federalism ka matlab hai power ka division between the center and the states.,
+me_07.wav,me,sarvam_v3_codemix_hi-IN,5.52,0.46153846153846156,0.6666666666666666,0.12280701754385964,Federalism का मतलब है Power का Division Between the Center and the State,
+me_08.wav,me,sarvam_v4_transcribe_hi-IN,4.61,1.0,1.0,1.0,आई बिलीव द गुड्स एंड सर्विसेज टैक्स इम्प्रूव्ड टैक्स कंप्लायंस बट इंक्रीज द बर्डन ऑफ स्मॉल ट्रेडर्स।,
+me_08.wav,me,sarvam_v4_codemix_hi-IN,2.46,0.058823529411764705,1.0,0.0,I believe the goods and services tax improved tax compliance but increased the burden of small traders.,
+me_08.wav,me,sarvam_v4_codemix_en-IN,2.24,0.058823529411764705,1.0,0.0,I believe the Goods and Services Tax improved tax compliance but increased the burden of small traders.,
+me_08.wav,me,sarvam_v4_codemix_unknown,2.29,0.058823529411764705,1.0,0.0,I believe the Goods and Services Tax improved tax compliance but increased the burden of small traders.,
+me_08.wav,me,sarvam_v3_codemix_hi-IN,3.94,0.11764705882352941,1.0,0.0,I believe the goods and services tax improved tax compliance but increase the burden of small traders.,
+me_09.wav,me,sarvam_v4_transcribe_hi-IN,3.98,1.0,1.0,1.0,मेरे होमटाउन इंदौर में अर्बन प्लानिंग और वेस्ट मैनेजमेंट एक बड़ा इशू है।,
+me_09.wav,me,sarvam_v4_codemix_hi-IN,2.89,0.46153846153846156,1.0,0.17543859649122806,मेरे hometown Indore में urban planning और waste management एक बड़ा issue है।,
+me_09.wav,me,sarvam_v4_codemix_en-IN,3.33,0.07692307692307693,1.0,0.0,My hometown Indore mein urban planning aur waste management ek bada issue hai.,
+me_09.wav,me,sarvam_v4_codemix_unknown,2.74,0.46153846153846156,1.0,0.17543859649122806,मेरे hometown Indore में urban planning और waste management एक बड़ा issue है।,
+me_09.wav,me,sarvam_v3_codemix_hi-IN,3.78,1.0,1.0,1.0,मेरे होमटाउन इंदौर में अर्बन प्लानिंग और वेस्ट मैनेजमेंट एक बड़ा इशू है,
+me_10.wav,me,sarvam_v4_transcribe_hi-IN,4.29,1.0,0.5,1.0,डिटेक्टिव प्रिंसिपल्स ऑफ स्टेट पॉलिसी आर नॉन-जस्टिसेबल लेकिन गवर्नेंस के लिए गाइड करते हैं।,
+me_10.wav,me,sarvam_v4_codemix_hi-IN,2.67,0.42857142857142855,0.5,0.13513513513513514,Detective principles of state policy are non-justiciable लेकिन governance के लिए guide करते हैं।,
+me_10.wav,me,sarvam_v4_codemix_en-IN,0.73,0.07142857142857142,0.5,0.0,Detective principles of state policy are non-justiciable lekin governance ke liye guide karte hain.,
+me_10.wav,me,sarvam_v4_codemix_unknown,0.59,0.42857142857142855,0.5,0.13513513513513514,Detective principles of state policy are non-justiciable लेकिन governance के लिए guide करते हैं।,
+me_10.wav,me,sarvam_v3_codemix_hi-IN,1.11,0.42857142857142855,0.5,0.13513513513513514,Deductive Principles of State Policy are non-justiciable लेकिन governance के लिए guide करते हैं,
+me_11.wav,me,sarvam_v4_transcribe_hi-IN,1.22,1.0,1.0,1.0,क्लाइमेट चेंज और डेवलपमेंट के बीच बैलेंस बनाना सस्टेनेबल डेवलपमेंट कहलाता है।,
+me_11.wav,me,sarvam_v4_codemix_hi-IN,0.71,0.5,1.0,0.19696969696969696,Climate change और development के बीच balance बनाना sustainable development कहलाता है।,
+me_11.wav,me,sarvam_v4_codemix_en-IN,0.72,0.08333333333333333,1.0,0.0,Climate change and development ke beech balance banana sustainable development kehlata hai.,
+me_11.wav,me,sarvam_v4_codemix_unknown,0.84,0.5,1.0,0.19696969696969696,Climate change और development के बीच balance बनाना sustainable development कहलाता है।,
+me_11.wav,me,sarvam_v3_codemix_hi-IN,0.83,0.5,1.0,0.19696969696969696,Climate Change और Development के बीच Balance बनाना Sustainable Development कहलाता है।,
+me_12.wav,me,sarvam_v4_transcribe_hi-IN,1.15,1.0,1.0,1.0,"एथिक्स में इंटीग्रिटी का मतलब है सही काम करना, इवन व्हेन नो वन इज़ वाचिंग।",
+me_12.wav,me,sarvam_v4_codemix_hi-IN,0.86,0.4666666666666667,1.0,0.2692307692307692,Ethics में integrity का मतलब है सही काम करना even when no one is watching.,
+me_12.wav,me,sarvam_v4_codemix_en-IN,0.79,0.0,1.0,0.0,Ethics mein integrity ka matlab hai sahi kaam karna even when no one is watching.,
+me_12.wav,me,sarvam_v4_codemix_unknown,0.66,0.0,1.0,0.0,Ethics mein integrity ka matlab hai sahi kaam karna even when no one is watching.,
+me_12.wav,me,sarvam_v3_codemix_hi-IN,0.9,0.5333333333333333,1.0,0.36,एथिक्स में integrity का मतलब है सही काम करना even when no one is watching,

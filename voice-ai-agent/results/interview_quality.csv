@@ -1,2 +1,6 @@
-session,group,board_turns,avg_words_per_board_turn,multi_question_turns,possible_praise_slips,finish_interview_calls,save_profile_calls,median_eou_delay_s,median_llm_ttft_s,median_tts_ttfb_s,est_response_latency_s,violations
-d805055c,live,3,18.7,0,0,0,0,1.48,0.72,0.21,2.41,"judge failed: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Your credit bal"
+session,group,board_turns,avg_words_per_board_turn,multi_question_turns,possible_praise_slips,finish_interview_calls,save_profile_calls,median_eou_delay_s,median_llm_ttft_s,median_tts_ttfb_s,est_response_latency_s
+0a7f0b62,live,7,30.9,0,0,0.0,0.0,0.48,0.59,0.22,1.29
+427a7ac8,live,5,31.8,0,0,0.0,0.0,0.47,0.59,0.21,1.27
+60f8815b,live,20,24.4,0,0,0.0,1.0,0.48,0.59,0.22,1.29
+d805055c,live,3,18.7,0,0,0.0,0.0,1.48,0.72,0.21,2.41
+sim-nvidia-nemotron-3-5-lightning-free-vague,nvidia/nemotron-3.5-lightning:free,9,42.3,4,1,,,,,,

@@ -1,10 +1,11 @@
 import json
 import os
 
-from anthropic import AsyncAnthropic
+from llm_client import DEFAULT_MODEL as LLM_DEFAULT
+from llm_client import chat
 
 DIMENSIONS = ["clarity", "depth", "balance", "awareness", "authenticity", "composure"]
-DEFAULT_MODEL = os.getenv("EVALUATOR_MODEL", "claude-sonnet-5-5")
+DEFAULT_MODEL = os.getenv("EVALUATOR_MODEL", LLM_DEFAULT)
 MIN_CANDIDATE_TURNS = 3
 
 SYSTEM = """You are a senior, strict evaluator of UPSC Civil Services Personality Test (interview) performances.
@@ -23,8 +24,11 @@ Calibration: 0-3 weak, 4-5 below average, 6-7 solid, 8-9 excellent, 10 exception
 
 Only report a factual slip if you are highly confident the candidate stated something wrong. Quote it briefly and give the correction. If unsure, leave it out.
 
+For every score, give one short direct evidence quote from the candidate's transcript. If the transcript does not support a high score, score conservatively. Do not infer strengths from the board's wording.
+
 Return ONLY a JSON object, no other text, in exactly this shape:
 {"scores": {"clarity": 0, "depth": 0, "balance": 0, "awareness": 0, "authenticity": 0, "composure": 0},
+ "evidence": {"clarity": "candidate quote", "depth": "candidate quote", "balance": "candidate quote", "awareness": "candidate quote", "authenticity": "candidate quote", "composure": "candidate quote"},
  "summary": "one or two sentences",
  "strengths": ["short point", "short point"],
  "improvements": ["short actionable point", "short actionable point"],
@@ -34,7 +38,8 @@ Return ONLY a JSON object, no other text, in exactly this shape:
 
 def format_transcript(turns: list[dict]) -> str:
     return "\n".join(
-        f"{'BOARD' if t['role'] == 'assistant' else 'CANDIDATE'}: {t['text']}" for t in turns
+        f"{'BOARD' if t['role'] == 'assistant' else 'CANDIDATE'}: {t['text']}"
+        for t in turns
     )
 
 
@@ -45,29 +50,34 @@ def extract_json(text: str) -> dict:
     return json.loads(text[start : end + 1])
 
 
-def _text_from(resp) -> str:
-    return "".join(b.text for b in resp.content if getattr(b, "type", "") == "text")
-
-
-async def evaluate(turns: list[dict], model: str | None = None) -> dict:
+async def evaluate(
+    turns: list[dict], model: str | None = None, timeout: float = 45.0, retries: int = 2
+) -> dict:
     if sum(1 for t in turns if t["role"] == "user") < MIN_CANDIDATE_TURNS:
         return {"too_short": True}
-    client = AsyncAnthropic()
     prompt = "Transcript:\n\n" + format_transcript(turns)
     last_err = None
-    for _ in range(2):
-        resp = await client.messages.create(
+    for _ in range(2):  # retry once on malformed output
+        text = await chat(
+            SYSTEM,
+            [{"role": "user", "content": prompt}],
             model=model or DEFAULT_MODEL,
-            max_tokens=1500,
-            system=SYSTEM,
-            messages=[{"role": "user", "content": prompt}],
+            max_tokens=3000,
+            timeout=timeout,
+            retries=retries,
+            temperature=0,
+            seed=47,
         )
         try:
-            data = extract_json(_text_from(resp))
+            data = extract_json(text)
             scores = {d: max(0, min(10, int(data["scores"][d]))) for d in DIMENSIONS}
             return {
                 "too_short": False,
                 "scores": scores,
+                "evidence": {
+                    d: str(data.get("evidence", {}).get(d, ""))[:300]
+                    for d in DIMENSIONS
+                },
                 "summary": str(data.get("summary", "")),
                 "strengths": list(data.get("strengths", []))[:3],
                 "improvements": list(data.get("improvements", []))[:3],
@@ -75,6 +85,6 @@ async def evaluate(turns: list[dict], model: str | None = None) -> dict:
                 "topics": [str(t) for t in data.get("topics", [])][:8],
                 "model": model or DEFAULT_MODEL,
             }
-        except Exception as e:  # retry once on malformed output
+        except Exception as e:
             last_err = e
     raise RuntimeError(f"Evaluator returned invalid output: {last_err}")

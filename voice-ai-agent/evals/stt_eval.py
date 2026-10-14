@@ -36,8 +36,15 @@ def term_recall(terms: str, hyp: str) -> float:
         return float("nan")
     h = normalize(hyp)
     h_nospace = h.replace(" ", "")
-    hits = sum(1 for t in items if normalize(t) in h or normalize(t).replace(" ", "") in h_nospace)
-    return hits / len(items)
+
+    def found(item: str) -> bool:
+        for alias in item.split("|"):
+            a = normalize(alias)
+            if a and (a in h or a.replace(" ", "") in h_nospace):
+                return True
+        return False
+
+    return sum(found(i) for i in items) / len(items)
 
 
 def safe_wer(ref: str, hyp: str) -> float:
@@ -48,12 +55,21 @@ def safe_wer(ref: str, hyp: str) -> float:
         return 1.0
     return jiwer.wer(ref, hyp)
 
+SARVAM_CONFIGS = [
+    # (model, mode, language)
+    ("saaras:v4", "transcribe", "hi-IN"),
+    ("saaras:v4", "codemix", "hi-IN"),
+    ("saaras:v4", "codemix", "en-IN"),
+    ("saaras:v4", "codemix", "unknown"),
+    ("saaras:v3", "codemix", "hi-IN"),
+]
 
-def make_sarvam(client, mode):
+
+def make_sarvam(client, model, mode, lang):
     def run(path: Path) -> str:
         with open(path, "rb") as f:
             r = client.speech_to_text.transcribe(
-                file=f, model="saaras:v3", mode=mode, language_code="hi-IN"
+                file=f, model=model, mode=mode, language_code=lang
             )
         return r.transcript
     return run
@@ -74,15 +90,18 @@ def deepgram_transcribe(path: Path) -> str:
     return r.json()["results"]["channels"][0]["alternatives"][0]["transcript"]
 
 
+
 def build_systems() -> dict:
     systems = {}
     if os.getenv("SARVAM_API_KEY"):
         client = SarvamAI(api_subscription_key=os.environ["SARVAM_API_KEY"])
-        for mode in ("transcribe", "codemix", "translit"):
-            systems[f"sarvam_{mode}"] = make_sarvam(client, mode)
+        for model, mode, lang in SARVAM_CONFIGS:
+            systems[f"sarvam_{model.split(':')[1]}_{mode}_{lang}"] = make_sarvam(client, model, mode, lang)
     if os.getenv("DEEPGRAM_API_KEY"):
         systems["deepgram_nova3"] = deepgram_transcribe
     return systems
+
+
 
 
 def main() -> None:
@@ -124,6 +143,8 @@ def main() -> None:
     by_speaker = ok.groupby(["system", "speaker"])["term_recall"].mean().unstack().round(2)
     summary.to_csv(RESULTS / "stt_summary.csv")
     by_speaker.to_csv(RESULTS / "stt_by_speaker.csv")
+    pd.set_option("display.width", 220)
+    pd.set_option("display.max_columns", None)
     print("\n=== SUMMARY ===\n", summary, "\n\n=== TERM RECALL BY SPEAKER ===\n", by_speaker)
 
 

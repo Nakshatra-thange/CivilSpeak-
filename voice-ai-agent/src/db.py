@@ -5,8 +5,14 @@ from pathlib import Path
 DB_PATH = Path(__file__).resolve().parent.parent / "data" / "mentor.db"
 
 PROFILE_FIELDS = [
-    "name", "hometown", "education", "optional_subject",
-    "hobbies", "work_experience", "service_preference", "medium",
+    "name",
+    "hometown",
+    "education",
+    "optional_subject",
+    "hobbies",
+    "work_experience",
+    "service_preference",
+    "medium",
 ]
 DIMENSIONS = ["clarity", "depth", "balance", "awareness", "authenticity", "composure"]
 INTENSITIES = {"gentle", "standard", "tough"}
@@ -69,7 +75,14 @@ def save_interview(intensity: str, scores: dict, topics: str, summary: str):
         conn.execute(
             f"INSERT INTO interviews (intensity, {cols}, overall, weakest, topics, summary) "
             f"VALUES (?, {marks}, ?, ?, ?, ?)",
-            [intensity, *[scores[d] for d in DIMENSIONS], overall, weakest, topics, summary],
+            [
+                intensity,
+                *[scores[d] for d in DIMENSIONS],
+                overall,
+                weakest,
+                topics,
+                summary,
+            ],
         )
         conn.commit()
     return overall, weakest
@@ -94,6 +107,3 @@ def weakest_dimension(window: int = 5) -> str | None:
         ).fetchone()
     vals = {d: row[d] for d in DIMENSIONS if row[d] is not None}
     return min(vals, key=vals.get) if vals else None
-
-
-init_db()
