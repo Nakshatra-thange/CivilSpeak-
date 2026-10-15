@@ -46,6 +46,8 @@ load_dotenv(".env.local")
 
 logger = logging.getLogger("upsc-board")
 DEMO_MODE = os.getenv("DEMO_MODE", "false").lower() in {"1", "true", "yes"}
+MEMORY_ENABLED = os.getenv("ENABLE_MEMORY", "0").lower() in {"1", "true", "yes"} and not DEMO_MODE
+logger.info("memory: %s", "ON" if MEMORY_ENABLED else "OFF")
 
 EVALS_DIR = Path(__file__).resolve().parent.parent / "data" / "evals"
 
@@ -61,10 +63,10 @@ class Assistant(Agent):
         super().__init__(
             llm=inference.LLM(model="google/gemma-4-31b-it"),
             instructions=build_instructions(
-                {} if DEMO_MODE else db.get_profile(),
-                [] if DEMO_MODE else db.recent_interviews(),
-                None if DEMO_MODE else db.weakest_dimension(),
-                past_questions=[] if DEMO_MODE else recent_board_questions(),
+                db.get_profile() if MEMORY_ENABLED else {},
+                db.recent_interviews() if MEMORY_ENABLED else [],
+                db.weakest_dimension() if MEMORY_ENABLED else None,
+                past_questions=recent_board_questions() if MEMORY_ENABLED else [],
                 focus_areas=pick_focus_areas(),
             ),
         )
@@ -136,7 +138,7 @@ class Assistant(Agent):
         if self.evaluation_saved and eval_path.exists():
             return json.loads(eval_path.read_text(encoding="utf-8"))
         answer_count = candidate_answer_count(turns)
-        if not DEMO_MODE:
+        if MEMORY_ENABLED:
             EVALS_DIR.mkdir(parents=True, exist_ok=True)
         if answer_count < 3:
             return {"too_short": True}
@@ -146,7 +148,7 @@ class Assistant(Agent):
                 return result
             overall = round(sum(result["scores"].values()) / len(result["scores"]), 1)
             weakest = min(result["scores"], key=result["scores"].get)
-            if not DEMO_MODE:
+            if MEMORY_ENABLED:
                 overall, weakest = await asyncio.to_thread(
                     db.save_interview,
                     self.intensity,
@@ -161,7 +163,7 @@ class Assistant(Agent):
                 "weakest": weakest,
                 **result,
             }
-            if not DEMO_MODE:
+            if MEMORY_ENABLED:
                 eval_path.write_text(
                     json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8"
                 )
@@ -178,7 +180,7 @@ class Assistant(Agent):
                 "error": str(exc)[:300],
                 "candidate_answers": answer_count,
             }
-            if not DEMO_MODE:
+            if MEMORY_ENABLED:
                 eval_path.write_text(
                     json.dumps(record, ensure_ascii=False, indent=2), encoding="utf-8"
                 )
@@ -226,7 +228,7 @@ class Assistant(Agent):
             "medium": medium,
         }
 
-        if not DEMO_MODE:
+        if MEMORY_ENABLED:
             await asyncio.to_thread(db.save_profile, fields)
 
         return "Saved."
@@ -428,7 +430,7 @@ async def my_agent(ctx: JobContext):
     # CREATE ASSISTANT
     # ========================================================
 
-    if not DEMO_MODE:
+    if MEMORY_ENABLED:
         db.init_db()
     assistant = Assistant()
 
@@ -461,12 +463,12 @@ async def my_agent(ctx: JobContext):
         assistant.session_id,
         on_shutdown=(
             None
-            if DEMO_MODE
+            if not MEMORY_ENABLED
             else lambda turns: assistant._evaluate_and_save(
                 turns, timeout=45, retries=3
             )
         ),
-        persist_transcript=not DEMO_MODE,
+        persist_transcript=MEMORY_ENABLED,
     )
 
     # ========================================================

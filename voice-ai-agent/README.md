@@ -28,12 +28,13 @@ This repository's Python project is in this directory. It uses Python 3.12 and `
 uv sync --dev
 cp .env.example .env.local
 # Fill in LiveKit and Sarvam credentials in .env.local.
-uv run src/agent.py dev
+# Set ENABLE_MEMORY=1 in your shell only if you want local profile/history persistence.
+ENABLE_MEMORY=1 uv run src/agent.py dev
 ```
 
 Set `OPENROUTER_API_KEY` in the process environment for post-interview evaluation and the evaluator scripts. The default evaluator is `nvidia/nemotron-3.5-lightning:free`. Optional `LLM_FALLBACK_MODELS` accepts comma-separated OpenRouter model IDs; fallback models may be paid, so configure only models you intend to use. Calls are serialized and spaced by 3.1 seconds by default; change with `OPENROUTER_MIN_INTERVAL` if your provider limit differs. `OPENROUTER_RETRIES` defaults to five; server-provided `Retry-After` delays take priority.
 
-For a public demo, set `DEMO_MODE=true` in the agent process. This bypasses shared SQLite state and local transcript/evaluation files, disables LiveKit session recording, and applies the 15-minute cap.
+Memory is off by default. Set `ENABLE_MEMORY=1` to retain candidate profiles, interview history, board questions, transcripts, and evaluation files; the dashboard needs this setting to show saved progress. `DEMO_MODE=true` always forces memory off, disables LiveKit session recording, and applies the 15-minute cap.
 
 Run the dashboard:
 
@@ -59,7 +60,7 @@ The earlier single completed simulated persona (“vague”) received an overall
 
 ## Privacy and demo mode
 
-With `DEMO_MODE=true`, the agent skips SQLite reads and writes, local transcript/evaluation files, and LiveKit session recording. Profile details and evaluation stay in the active session and are not stored by this application. Sessions have a 15-minute limit. LiveKit Cloud still processes the realtime media needed to carry the call; with Agent Observability enabled, LiveKit may retain transcripts, traces, logs, and recordings for up to 30 days, so this app sets `record=False` in demo mode. Review the LiveKit project settings and the current provider policies before making a public deployment.
+Unless `ENABLE_MEMORY=1` and `DEMO_MODE` is not true, the agent skips SQLite reads and writes and local transcript/evaluation files. `DEMO_MODE=true` also disables LiveKit session recording. Profile details and evaluation stay in the active session and are not stored by this application. Sessions have a 15-minute limit. LiveKit Cloud still processes the realtime media needed to carry the call; with Agent Observability enabled, LiveKit may retain transcripts, traces, logs, and recordings for up to 30 days, so this app sets `record=False` in demo mode. Review the LiveKit project settings and the current provider policies before making a public deployment.
 
 Do not put secrets in the repository. `.env.local`, `.env.deploy`, the SQLite database, transcripts, evaluations, and recorded WAV clips are excluded by `.gitignore`.
 

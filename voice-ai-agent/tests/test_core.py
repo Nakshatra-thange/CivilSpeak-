@@ -160,3 +160,9 @@ async def test_openrouter_retries_and_honors_retry_after(monkeypatch):
     monkeypatch.setattr(llm_client, "MIN_REQUEST_INTERVAL", 0)
     assert await llm_client.chat("system", [], retries=2) == "ok"
     assert 5 in waits
+
+
+def test_new_candidate_instructions_do_not_include_saved_details():
+    prompt = build_instructions(focus_areas=[])
+    assert "New candidate. No details saved yet." in prompt
+    assert "Saved details:" not in prompt
