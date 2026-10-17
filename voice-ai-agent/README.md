@@ -56,7 +56,24 @@ The STT benchmark currently has 12 read-aloud clips from one speaker. With `saar
 
 Four earlier live transcripts averaged 8.75 board turns and 26.5 words per board turn, with no multi-question turns or praise slips. The measured median components averaged about 0.73 seconds for end-of-turn, 0.62 seconds for LLM first token, and 0.22 seconds for TTS first byte (about 1.56 seconds total). Those four sessions all lacked a `finish_interview` tool call; shutdown evaluation has since been added, and these historical measurements do not verify that new lifecycle in a live call.
 
-The earlier single completed simulated persona (“vague”) received an overall 7.0/10. That is a weak evaluator-validity result; the four-persona ranking has not been established. Simulations measure prompt compliance on the selected OpenRouter simulation model, not on production Gemma. Small samples and model/provider variance limit conclusions.
+#### Example scorecard
+
+The available live transcripts do not include saved evaluator results. I attempted to score the longest eligible live transcript, but the evaluator request could not reach OpenRouter in this environment. No real-interview scores are reported here rather than estimating them.
+
+| Clarity | Depth | Balance | Awareness | Authenticity | Composure | Overall | Weakest |
+|---|---|---|---|---|---|---|---|
+| Not scored | Not scored | Not scored | Not scored | Not scored | Not scored | Not scored | Not scored |
+
+#### Does the evaluator discriminate?
+
+| Simulated candidate | Behaviour | Overall score |
+|---|---|---:|
+| Strong | Structured, examples, multi-sided, admits uncertainty | Not run |
+| Vague | Generic buzzwords, no depth | 7.0/10 (previous partial run) |
+| Bluffer | Confident wrong facts, bluffs when unsure | Not run |
+| One-sided | Extreme opinions, ignores the other side | Not run |
+
+The available results do not establish correct ranking: the only completed persona is vague at 7.0/10, which is too generous for the scripted behaviour. The requested fresh checks could not be completed because the environment blocks network access, and automatic review rejected sending the real interview transcript to OpenRouter without specific authorization for that export. Simulations measure prompt compliance on the selected OpenRouter simulation model, not on production Gemma. Small samples and model/provider variance limit conclusions.
 
 ## Privacy and demo mode
 
