@@ -2,10 +2,6 @@
 
 A real-time voice agent that conducts a mock UPSC Personality Test (interview) in English and Hinglish. The AI "board chairperson" asks questions generated from the candidate's introduction and live answers, and cross-questions what they say. A separate evaluator model then scores the interview on six dimensions, and the board speaks the feedback.
 
-- Live demo: [FILL: link, or "available on request"]
-- Walkthrough (Loom): [FILL: link]
-- Built by [FILL: name] as my first voice agent, for the SuperKalam AI/ML internship application.
-
 ## Why this
 
 The interview is the final stage of the UPSC Civil Services Exam. Practice for it usually means a booked panel session with limited slots. A voice agent can give an aspirant a repeatable practice round at any hour, in the way aspirants actually speak: English mixed with Hindi.
@@ -148,7 +144,7 @@ The same audit also found that the finish step was never called in those session
 
 ## Where this fits CivilSpeak
 
-SuperKalam already covers practice and Mains evaluation. This explores the last stage. Next steps I would build: DAF PDF upload instead of speaking details, a current-affairs source so questions reflect recent events, per-user memory that carries mistake patterns from practice into interview probes, and testing with Hindi-medium aspirants.
+CivilSpeak already covers practice and Mains evaluation. This explores the last stage. Next steps I would build: DAF PDF upload instead of speaking details, a current-affairs source so questions reflect recent events, per-user memory that carries mistake patterns from practice into interview probes, and testing with Hindi-medium aspirants.
 
 ## Run it
 
