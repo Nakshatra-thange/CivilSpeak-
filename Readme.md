@@ -146,7 +146,7 @@ The same audit also found that the finish step was never called in those session
 - Local mode keeps one candidate's memory in a single-user SQLite file. Multi-user use needs per-user accounts in a hosted database.
 - Privacy: the evaluator model's provider may log requests, and LiveKit may retain session data according to project settings. The demo page states this.
 
-## Where this fits SuperKalam
+## Where this fits CivilSpeak
 
 SuperKalam already covers practice and Mains evaluation. This explores the last stage. Next steps I would build: DAF PDF upload instead of speaking details, a current-affairs source so questions reflect recent events, per-user memory that carries mistake patterns from practice into interview probes, and testing with Hindi-medium aspirants.
 
