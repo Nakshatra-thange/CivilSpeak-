@@ -4,7 +4,7 @@ This is a starter template for [LiveKit Agents](https://docs.livekit.io/agents) 
 
 ## SuperKalam demo configuration
 
-Production uses the included `/api/token` route and requires the access-code gate; the LiveKit development token server is used only during local development. Set `LIVEKIT_URL`, `LIVEKIT_API_KEY`, `LIVEKIT_API_SECRET`, `DEMO_ACCESS_CODE`, and a random `DEMO_SESSION_SECRET` (at least 32 characters) as server-side deployment environment variables. Never prefix these values with `NEXT_PUBLIC_`.
+The app has no demo access-code gate. When using the included `/api/token` route, set `LIVEKIT_URL`, `LIVEKIT_API_KEY`, and `LIVEKIT_API_SECRET` in `.env.local`. These are server-side values; never prefix them with `NEXT_PUBLIC_`.
 
 The landing screen explains that LiveKit session recording is disabled for demo sessions and that the evaluator provider processes the transcript. The agent separately limits each call to 15 minutes. Configure the backend with `DEMO_MODE=true` so it keeps no shared SQLite state or local transcript/evaluation files.
 

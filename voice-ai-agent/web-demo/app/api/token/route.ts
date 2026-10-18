@@ -5,7 +5,6 @@ import {
   RoomConfiguration,
   type VideoGrant,
 } from 'livekit-server-sdk';
-import { hasValidAccessCookie } from '@/lib/demo-access';
 
 type ConnectionDetails = {
   serverUrl: string;
@@ -23,13 +22,6 @@ const LIVEKIT_URL = process.env.LIVEKIT_URL;
 export const revalidate = 0;
 
 export async function POST(req: Request) {
-  if (process.env.NODE_ENV !== 'development' && !hasValidAccessCookie(req)) {
-    return NextResponse.json(
-      { error: 'Enter the demo access code before requesting a connection.' },
-      { status: 401, headers: { 'Cache-Control': 'no-store' } }
-    );
-  }
-
   try {
     if (LIVEKIT_URL === undefined) {
       throw new Error('LIVEKIT_URL is not defined');
